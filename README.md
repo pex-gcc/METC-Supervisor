@@ -5,6 +5,8 @@ The EventSink function listens for all events coming from Pexip.  It then sends 
 Necessary environment variables:
 
 ```
-DatabaseEndpoint        - endpoint for Azure database for storing all events and active calls
+DatabaseEndpoint        - endpoint for Azure Cosmos database for storing all events and active calls
 QueueStorageAccount     - endpoint for storage account for queues
+EventsDatabaseName      - name of the database with Cosmos to store events 
+EventsContainerName     - name of the container within the above database to store events
 ```

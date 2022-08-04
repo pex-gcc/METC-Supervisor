@@ -1,5 +1,6 @@
 import logging
 import json
+import os
 
 import azure.functions as func
 import cosmosdb_helpers as db_help
@@ -13,10 +14,9 @@ def main(msg: func.QueueMessage) -> None:
     logging.info(f'All event queue trigger processed new item: {msg.id}, inserted: {str(msg.insertion_time)}')
     event = json.loads(msg.get_body())
 
-    # outEvents.set(func.Document.from_json(msg.get_body()))
-    # Initialize "all events" database    
+    # Initialize "all events" database when function is first loaded, object stored globally in `db_events` after this
     if db_events is None:
-        db_events = db_help.db_init('eventDatabase', 'events', '/event')
+        db_events = db_help.db_init(os.environ["EventsDatabaseName"], os.environ["EventsContainerName"], '/event')
 
     # Send all event to events container to store for reporting
     db_help.db_add(db_events, event)
