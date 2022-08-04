@@ -6,7 +6,7 @@
       "type": "httpTrigger",
       "direction": "in",
       "name": "req",
-      "route": "api/EventSink",
+      "route": "policy/v1/service/configuration",
       "methods": [
         "get",
         "post"
@@ -16,13 +16,6 @@
       "type": "http",
       "direction": "out",
       "name": "$return"
-    },
-    {
-      "type": "queue",
-      "direction": "out",
-      "name": "QueueAllEvents",
-      "queueName": "pxallevents",
-      "connection": "QueueStorageAccount"
     }
   ]
 }
