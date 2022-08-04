@@ -7,6 +7,7 @@ import cosmosdb_helpers as db_help
 
 db_events = None
 
+# This function is triggered when an event is passed into the queue
 def main(msg: func.QueueMessage) -> None:
     global db_events
 
