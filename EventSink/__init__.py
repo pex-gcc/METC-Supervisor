@@ -3,6 +3,7 @@ import logging
 
 import azure.functions as func
 
+# To provoke Github workflow
 def main(req: func.HttpRequest, QueueAllEvents: func.Out[str]) -> func.HttpResponse:
     request_body = req.get_body()
     
