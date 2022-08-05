@@ -23,6 +23,13 @@
       "name": "QueueAllEvents",
       "queueName": "pxallevents",
       "connection": "QueueStorageAccount"
+    },
+    {
+      "type": "queue",
+      "direction": "out",
+      "name": "QueueParticipantEvents",
+      "queueName": "pxpartevents",
+      "connection": "QueueStorageAccount"
     }
   ]
 }
