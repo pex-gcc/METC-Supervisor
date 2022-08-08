@@ -32,7 +32,7 @@ def main(msg: func.QueueMessage) -> None:
 
     # Initialize "active calls" database    
     if db_events is None:
-        db_events = db_help.db_init('eventDatabase', 'activeCalls', '/data/service_tag')
+        db_events = db_help.db_init(os.environ["EventsDatabaseName"], os.environ["ActiveCallsContainer"], '/data/service_tag')
 
     # Get event json data from queue
     logging.info(f'Participant queue trigger processed new item: {msg.id}, inserted: {str(msg.insertion_time)}')
@@ -45,26 +45,26 @@ def main(msg: func.QueueMessage) -> None:
         logging.info(f'Event is type {event_type}, sending to active calls db')
         db_help.db_add(db_events, event)
         
-        if event['data']['service_tag'] == os.environ["CallerServiceTag"] and event['data']['call_direction'] == 'in':
-            operator = find_operator()
+        # if event['data']['service_tag'] == os.environ["CallerServiceTag"] and event['data']['call_direction'] == 'in':
+        #     operator = find_operator()
             
-            fqdn = os.environ["ManagementNodeFQDN"]
-            uname = os.environ["ManagementNodeUsername"]
-            pwd = os.environ["ManagementNodePassword"]
-            dom = os.environ["SIPDialingDomain"]
-            dial_location = os.environ["SIPDialLocation"]
-            api_dial = "/api/admin/command/v1/participant/dial/"
+        #     fqdn = os.environ["ManagementNodeFQDN"]
+        #     uname = os.environ["ManagementNodeUsername"]
+        #     pwd = os.environ["ManagementNodePassword"]
+        #     dom = os.environ["SIPDialingDomain"]
+        #     dial_location = os.environ["SIPDialLocation"]
+        #     api_dial = "/api/admin/command/v1/participant/dial/"
             
-            data = {
-                'conference_alias': event['data']['destination_alias'],
-                'destination': operator + '@' + dom,
-                'routing': 'manual',
-                'role': 'guest',
-                'remote_display_name': os.environ["OperatorDisplayName"],
-                'system_location': dial_location
-            }
+        #     data = {
+        #         'conference_alias': event['data']['destination_alias'],
+        #         'destination': operator + '@' + dom,
+        #         'routing': 'manual',
+        #         'role': 'guest',
+        #         'remote_display_name': os.environ["OperatorDisplayName"],
+        #         'system_location': dial_location
+        #     }
             
-            requests.post(fqdn + api_dial, auth=(uname, pwd), json=data)
+        #     requests.post(fqdn + api_dial, auth=(uname, pwd), json=data)
 
     elif event_type == 'participant_disconnected':
         logging.info(f'Event type is {event_type}, deleting from active calls db ')

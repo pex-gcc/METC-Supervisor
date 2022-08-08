@@ -5,6 +5,7 @@ import azure.functions as func
 import cosmosdb_helpers as db_help
 import json
 import re
+import os
 
 db_config = None
 
@@ -15,9 +16,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     
     logging.info('/service/configuration http trigger function processed a request.')
 
-    # Initialize "active calls" database    
+    # Initialize configuration database    
     if db_config is None:
-        db_config = db_help.db_init('eventDatabase', 'ControlConfig', '/response/result/service_tag')
+        db_config = db_help.db_init(os.environ['EventsDatabaseName'], os.environ['ConfigContainerName'], '/response/result/service_tag')
 
     config = db_help.db_query(db_config, 'SELECT * FROM ControlConfig')
 
