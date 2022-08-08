@@ -47,7 +47,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             match = re.match(conf['regex'], local_alias)
             if match:
                 policy_response = conf['response']
-                policy_response['name'] = conf['basename'] + match.group(1)
+                if 'basename' in conf and conf['basename'] and len(list(match.groups())) > 0:
+                    policy_response['result']['name'] = conf['basename'] + match.group(1)
                 break
             
     # For anything else pass back to Pexip
