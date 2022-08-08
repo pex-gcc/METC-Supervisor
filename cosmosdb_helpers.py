@@ -26,7 +26,10 @@ def db_init(database_name: str, container_name: str, partition_key: str) -> Cont
 
 # Add object to specified container, generate an id if it is not defined
 def db_add(container: Container, event: dict) -> None:
-    container.create_item(body=event, enable_automatic_id_generation=True)
+    try:
+        container.create_item(body=event, enable_automatic_id_generation=True)
+    except exceptions.CosmosResourceExistsError:
+        logging.info(f'Event already in database')
     
     return
 
