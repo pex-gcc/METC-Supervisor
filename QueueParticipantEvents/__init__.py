@@ -16,7 +16,7 @@ def main(msg: func.QueueMessage) -> None:
     
     def call_operator(event: dict, oper: dict) -> None:
         operators = {}
-        query = 'SELECT * FROM activeCalls c WHERE c.data.service_tag = "' + oper.get('reponse').get('service_tag') + '"'
+        query = 'SELECT * FROM activeCalls c WHERE c.data.service_tag = "' + oper.get('response', {}).get('result', {}).get('service_tag') + '"'
         operator_participants = db_help.db_query(db_events, query)
         for p in operator_participants:
             if not p['data']['conference'] in operators:
@@ -44,7 +44,7 @@ def main(msg: func.QueueMessage) -> None:
             'destination': operator + '@' + dom,
             'routing': 'manual',
             'role': 'guest',
-            'remote_display_name': c.get('OperatorDisplayName'),
+            'remote_display_name': oper.get('display_name'),
             'system_location': dial_location
         }
         
@@ -60,8 +60,6 @@ def main(msg: func.QueueMessage) -> None:
     if db_config is None:
         db_config = db_help.db_init(os.environ['EventsDatabaseName'], os.environ['ConfigContainerName'], '/response/result/service_tag')
 
-    config = db_help.db_query(db_config, 'SELECT * FROM ControlConfig')
-
     # Get event json data from queue
     logging.info(f'Participant queue trigger processed new item: {msg.id}, inserted: {str(msg.insertion_time)}')
     event_data =  msg.get_body()
@@ -73,18 +71,21 @@ def main(msg: func.QueueMessage) -> None:
         logging.info(f'Event is type {event_type}, sending to active calls db')
         db_help.db_add(db_events, event)
         
-        c = None
-        for conf in config:
-            if event.get('response').get('service_tag') == conf.get('response').get('service_tag'):
-                c = conf
-                break
-            
-        if c and c.get('type') == 'caller' and c.get('connectoperator') and event.get('call_direction') == 'in':
-            oper_conf = None
-            for conf in config:
-                if c.get('operatorname') == conf.get('response').get('service_tag'):
-                    call_operator(event, conf)
-                    break
+        tag = event.get('data', {}).get('service_tag')
+        if tag:
+            query = 'SELECT * FROM ControlConfig c WHERE c.response.result.service_tag = "' + tag + '"'
+            conf = db_help.db_query(db_config, query)
+            if conf:
+                conf = conf[0]
+
+            if conf and conf.get('type') == 'caller' and conf.get('connectoperator') and event.get('data', {}).get('call_direction') == 'in':
+                query = 'SELECT * FROM ControlConfig c WHERE c.response.result.service_tag = "' + conf.get('operatorname', '') + '"'
+                oper_conf = db_help.db_query(db_config, query)
+                if oper_conf:
+                    oper_conf = oper_conf[0]
+
+        if oper_conf:
+            call_operator(event, oper_conf)
 
     elif event_type == 'participant_disconnected':
         logging.info(f'Event type is {event_type}, deleting from active calls db ')
