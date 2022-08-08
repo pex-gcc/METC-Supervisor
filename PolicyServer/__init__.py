@@ -44,8 +44,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # Check local alias against config database
     else:
         for conf in config:
-            if re.match(conf['regex'], local_alias):
+            match = re.match(conf['regex'], local_alias)
+            if match:
                 policy_response = conf['response']
+                policy_response['name'] = conf['basename'] + match.group(1)
                 break
             
     # For anything else pass back to Pexip
