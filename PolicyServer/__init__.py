@@ -2,11 +2,24 @@ from ast import operator
 import logging
 
 import azure.functions as func
+import cosmosdb_helpers as db_help
 import json
+import re
+
+db_config = None
 
 # This function reads request from Pexip and returns service configuration
 def main(req: func.HttpRequest) -> func.HttpResponse:
+    global db_config
+    policy_response = None
+    
     logging.info('/service/configuration http trigger function processed a request.')
+
+    # Initialize "active calls" database    
+    if db_config is None:
+        db_config = db_help.db_init('eventDatabase', 'ControlConfig', '/response/result/service_tag')
+
+    config = db_help.db_query(db_config, 'SELECT * FROM ControlConfig')
 
     # response to reject call
     policy_reponse_reject = {
@@ -20,17 +33,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         "action" : "continue"
         }
 
-    # test response to enter a conference
-    policy_response_test = {
-            "status" : "success",
-            "action" : "continue",
-            "result" : {
-                "service_type" : "conference",
-                "name" : "External Policy",
-                "service_tag" : "policy"
-                }
-            }
-
     # Get local alias from passed-in parameters    
     local_alias = req.params.get('local_alias')
 
@@ -38,16 +40,15 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     if not local_alias:
         policy_response = policy_reponse_reject
 
-    # If 'external' is dialed, pass in the test conference response
-    elif local_alias == 'external':
-        policy_response = policy_response_test
-        
-    # If 'external_reject' is dialed, reject the call
-    elif local_alias == 'external_reject':
-        policy_response = policy_reponse_reject
-
-    # For anything else pass back to Pexip
+    # Check local alias against config database
     else:
+        for conf in config:
+            if re.match(conf['regex'], local_alias):
+                policy_response = conf['response']
+                break
+            
+    # For anything else pass back to Pexip
+    if not policy_response:        
         policy_response = policy_response_continue
 
     # Return the response as type 'application/json'
