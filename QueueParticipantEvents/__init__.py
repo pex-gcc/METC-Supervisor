@@ -83,9 +83,7 @@ def main(msg: func.QueueMessage) -> None:
                 oper_conf = db_help.db_query(db_config, query)
                 if oper_conf:
                     oper_conf = oper_conf[0]
-
-        if oper_conf:
-            call_operator(event, oper_conf)
+                    call_operator(event, oper_conf)
 
     elif event_type == 'participant_disconnected':
         logging.info(f'Event type is {event_type}, deleting from active calls db ')
