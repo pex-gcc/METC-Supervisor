@@ -38,7 +38,7 @@ def db_delete(container: Container, event: dict) -> None:
     for k in pk_path.split('/'):
         if k:
             pk = pk[k]
-    if 'id' in event and pk:
+    if 'id' in event:
         container.delete_item(item = event['id'], partition_key=pk)
     else:
         logging.info(f'Item did not have id or partition key field to allow deletion.')
