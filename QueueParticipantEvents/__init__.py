@@ -32,7 +32,7 @@ def main(msg: func.QueueMessage) -> None:
 
     # Initialize "active calls" database    
     if db_events is None:
-        db_events = db_help.db_init(os.environ["EventsDatabaseName"], os.environ["ActiveCallsContainer"], '/data/service_tag')
+        db_events = db_help.db_init(os.environ["EventsDatabaseName"], os.environ["ActiveCallsContainerName"], '/data/service_tag')
 
     # Get event json data from queue
     logging.info(f'Participant queue trigger processed new item: {msg.id}, inserted: {str(msg.insertion_time)}')
