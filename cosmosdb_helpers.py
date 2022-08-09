@@ -56,12 +56,21 @@ def db_query(container: Container, query: str) -> Iterable:
     return results  
 
 # Delete passed container
-def db_clean(database_name: str, container_name: str) -> None:
+def db_clean(container_name: str) -> None:
     AccountEndpoint = os.environ["DatabaseEndpoint"]
     endpoint = AccountEndpoint.split(";")[0].split('=')[1]
     key = AccountEndpoint.split("AccountKey=")[1]
     client = CosmosClient(endpoint, key)
-    database = client.get_database_client(database=database_name)
-    database.delete_container(container_name)
+    database = client.get_database_client(database=os.environ['EventsDatabaseName'])
+    container = database.get_container_client(container_name)
+    
+    try:
+        container.read()
+    except exceptions.ResourceNotFoundError:
+        return
+    
+    items = container.read_all_items()
+    for item in list(items):
+        db_delete(container, item)
     
     return
