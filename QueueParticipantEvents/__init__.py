@@ -60,6 +60,8 @@ def main(msg: func.QueueMessage) -> None:
     if db_config is None:
         db_config = db_help.db_init(os.environ['EventsDatabaseName'], os.environ['ConfigContainerName'], '/response/result/service_tag')
 
+    config = db_help.db_query(db_config, 'SELECT * FROM ControlConfig')
+
     # Get event json data from queue
     logging.info(f'Participant queue trigger processed new item: {msg.id}, inserted: {str(msg.insertion_time)}')
     event_data =  msg.get_body()
@@ -71,12 +73,13 @@ def main(msg: func.QueueMessage) -> None:
         logging.info(f'Event is type {event_type}, sending to active calls db')
         db_help.db_add(db_events, event)
         
-        tag = event.get('data', {}).get('service_tag')
-        if tag:
-            query = 'SELECT * FROM ControlConfig c WHERE c.response.result.service_tag = "' + tag + '"'
-            conf = db_help.db_query(db_config, query)
-            if conf:
-                conf = conf[0]
+        alias = event.get('data', {}).get('destination_alias')
+        if alias:
+            for c in config:
+                match = re.match(c['regex'], alias)
+                if match:
+                    conf = c
+                    break
 
             if conf and conf.get('type') == 'caller' and conf.get('connectoperator') and event.get('data', {}).get('call_direction') == 'in':
                 query = 'SELECT * FROM ControlConfig c WHERE c.response.result.service_tag = "' + conf.get('operatorname', '') + '"'
