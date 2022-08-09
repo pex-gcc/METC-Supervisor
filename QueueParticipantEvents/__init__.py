@@ -7,13 +7,7 @@ import re
 import azure.functions as func
 import cosmosdb_helpers as db_help
 
-db_events = None
-db_config = None
-
 def main(msg: func.QueueMessage) -> None:
-    global db_events
-    global db_config
-    
     def call_operator(event: dict, oper: dict) -> None:
         operators = {}
         query = 'SELECT * FROM activeCalls c WHERE c.data.service_tag = "' + oper.get('response', {}).get('result', {}).get('service_tag') + '"'
@@ -53,12 +47,10 @@ def main(msg: func.QueueMessage) -> None:
         return operator
 
     # Initialize "active calls" database    
-    if db_events is None:
-        db_events = db_help.db_init(os.environ['EventsDatabaseName'], os.environ['ActiveCallsContainerName'], '/data/service_tag')
+    db_events = db_help.db_init(os.environ['EventsDatabaseName'], os.environ['ActiveCallsContainerName'], '/data/service_tag')
 
     # Get call configuration
-    if db_config is None:
-        db_config = db_help.db_init(os.environ['EventsDatabaseName'], os.environ['ConfigContainerName'], '/response/result/service_tag')
+    db_config = db_help.db_init(os.environ['EventsDatabaseName'], os.environ['ConfigContainerName'], '/response/result/service_tag')
 
     config = db_help.db_query(db_config, 'SELECT * FROM ControlConfig')
 

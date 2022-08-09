@@ -7,18 +7,14 @@ import json
 import re
 import os
 
-db_config = None
-
 # This function reads request from Pexip and returns service configuration
 def main(req: func.HttpRequest) -> func.HttpResponse:
-    global db_config
     policy_response = None
     
     logging.info('/service/configuration http trigger function processed a request.')
 
     # Initialize configuration database    
-    if db_config is None:
-        db_config = db_help.db_init(os.environ['EventsDatabaseName'], os.environ['ConfigContainerName'], '/response/result/service_tag')
+    db_config = db_help.db_init(os.environ['EventsDatabaseName'], os.environ['ConfigContainerName'], '/response/result/service_tag')
 
     config = db_help.db_query(db_config, 'SELECT * FROM ControlConfig')
 
