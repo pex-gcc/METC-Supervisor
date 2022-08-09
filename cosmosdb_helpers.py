@@ -36,7 +36,7 @@ def db_add(container: Container, event: dict) -> None:
 # Delete object from specified container
 # Get defined partition key from container, walk the data to find value of specified partition key
 def db_delete(container: Container, event: dict) -> None:
-    pk_path = container._properties['partitionKey']['paths'][0]
+    pk_path = container.read()['partitionKey']['paths'][0]
     pk = event
     for k in pk_path.split('/'):
         if k:
@@ -65,12 +65,11 @@ def db_clean(container_name: str) -> None:
     container = database.get_container_client(container_name)
     
     try:
-        container.read()
+        props = container.read()
     except exceptions.ResourceNotFoundError:
         return
     
-    items = container.read_all_items()
-    for item in list(items):
-        db_delete(container, item)
+    pk = props['partitionKey']['paths'][0]
+    database.delete_container(container)
     
     return
