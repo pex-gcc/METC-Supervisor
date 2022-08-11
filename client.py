@@ -1,3 +1,5 @@
+from typing import List
+from xmlrpc.client import Boolean
 import requests
 import json
 import cosmosdb_helpers as db_help
@@ -33,9 +35,8 @@ class api_client:
         self.ref.cancel()
         header = {"token" : self.token}
         resp = requests.post(self.url_base + "/release_token", headers=header)
-        
-def call_operator(event: dict, oper: dict) -> None:
-    # Initialize "active calls" database    
+
+def get_operator(oper: dict, GetAll: Boolean = False) -> List:
     db_events = db_help.db_init(os.environ['EventsDatabaseName'], os.environ['ActiveCallsContainerName'], '/data/service_tag')
     
     operators = {}
@@ -47,12 +48,39 @@ def call_operator(event: dict, oper: dict) -> None:
         else:
             operators[p['data']['conference']] += 1
     
-    min_part = 1000
-    operator = oper.get('basename') + '1'
-    for o in operators.keys():
-        if operators[o] < min_part:
-            min_part = operators[o]
-            operator = o
+    if not operators:
+        return oper.get('basename') + '1'
+    
+    if GetAll:
+        operator = list(operators.keys())
+    else:
+        operator = [k for k, v in operators.items() if v==min(operators.values())]
+        
+    return operator
+        
+def call_operator(event: dict, oper: dict) -> None:
+    # Initialize "active calls" database    
+    # db_events = db_help.db_init(os.environ['EventsDatabaseName'], os.environ['ActiveCallsContainerName'], '/data/service_tag')
+    
+    # operators = {}
+    # query = 'SELECT * FROM activeCalls c WHERE c.data.service_tag = "' + oper.get('response', {}).get('result', {}).get('service_tag') + '"'
+    # operator_participants = db_help.db_query(db_events, query)
+    # for p in operator_participants:
+    #     if not p['data']['conference'] in operators:
+    #         operators[p['data']['conference']] = 1
+    #     else:
+    #         operators[p['data']['conference']] += 1
+    
+    
+    
+    # min_part = 1000
+    # operator = oper.get('basename') + '1'
+    # for o in operators.keys():
+    #     if operators[o] < min_part:
+    #         min_part = operators[o]
+    #         operator = o
+
+    operator = get_operator(oper)[0]
             
     fqdn = os.environ["ManagementNodeFQDN"]
     uname = os.environ["ManagementNodeUsername"]
@@ -72,5 +100,3 @@ def call_operator(event: dict, oper: dict) -> None:
     }
     
     requests.post(fqdn + api_dial, auth=(uname, pwd), json=data)
-
-    return operator
