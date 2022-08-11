@@ -5,4 +5,3 @@
 azure-functions
 azure-cosmos
 requests
-threading
