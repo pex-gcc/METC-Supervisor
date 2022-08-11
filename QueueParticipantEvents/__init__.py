@@ -1,51 +1,13 @@
 import logging
 import json
 import os
-import requests
 import re
 
 import azure.functions as func
 import cosmosdb_helpers as db_help
+from client import call_operator
 
 def main(msg: func.QueueMessage) -> None:
-    def call_operator(event: dict, oper: dict) -> None:
-        operators = {}
-        query = 'SELECT * FROM activeCalls c WHERE c.data.service_tag = "' + oper.get('response', {}).get('result', {}).get('service_tag') + '"'
-        operator_participants = db_help.db_query(db_events, query)
-        for p in operator_participants:
-            if not p['data']['conference'] in operators:
-                operators[p['data']['conference']] = 1
-            else:
-                operators[p['data']['conference']] += 1
-        
-        min_part = 1000
-        operator = oper.get('basename') + '1'
-        for o in operators.keys():
-            if operators[o] < min_part:
-                min_part = operators[o]
-                operator = o
-                
-        fqdn = os.environ["ManagementNodeFQDN"]
-        uname = os.environ["ManagementNodeUsername"]
-        pwd = os.environ["ManagementNodePassword"]
-        dial_location = os.environ["SIPDialLocation"]
-        dom = oper.get('domain')
-
-        api_dial = "/api/admin/command/v1/participant/dial/"
-        
-        data = {
-            'conference_alias': event['data']['destination_alias'],
-            'destination': operator + '@' + dom,
-            'routing': 'manual',
-            'role': 'guest',
-            'remote_display_name': oper.get('display_name'),
-            'system_location': dial_location
-        }
-        
-        requests.post(fqdn + api_dial, auth=(uname, pwd), json=data)
-
-        return operator
-
     # Initialize "active calls" database    
     db_events = db_help.db_init(os.environ['EventsDatabaseName'], os.environ['ActiveCallsContainerName'], '/data/service_tag')
 
@@ -67,6 +29,7 @@ def main(msg: func.QueueMessage) -> None:
         
         alias = event.get('data', {}).get('destination_alias')
         if alias:
+            conf = None
             for c in config:
                 match = re.match(c['regex'], alias)
                 if match:
