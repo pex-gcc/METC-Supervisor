@@ -128,14 +128,14 @@ def find_operator(alias: str, oper: dict) -> None:
 
     api_dial = "/api/admin/command/v1/participant/dial/"
     
-    data = {
-        'conference_alias': alias,
-        'destination': operator + '@' + dom,
-        'routing': 'manual',
-        'role': 'guest',
-        'remote_display_name': oper.get('display_name'),
-        'system_location': dial_location
-    }
-    
     if len(operator) == 1:
+        data = {
+            'conference_alias': alias,
+            'destination': operator[0] + '@' + dom,
+            'routing': 'manual',
+            'role': 'guest',
+            'remote_display_name': oper.get('display_name'),
+            'system_location': dial_location
+        }
+    
         requests.post(fqdn + api_dial, auth=(uname, pwd), json=data)
