@@ -7,6 +7,8 @@ import os
 
 from threading import Timer
 
+api_clients = {}
+
 class api_client:
     def get_token(self, resp: requests.Response) -> None:
         if resp.status_code == 200:
@@ -35,36 +37,6 @@ class api_client:
         self.ref.cancel()
         header = {"token" : self.token}
         resp = requests.post(self.url_base + "/release_token", headers=header)
-
-
-# Return the operator or multiple operators
-# def get_operator(oper: dict, GetAll: Boolean = False) -> List:
-#     # Initialize events database
-#     db_events = db_help.db_init(os.environ['EventsDatabaseName'], os.environ['ActiveCallsContainerName'], '/data/service_tag')
-    
-#     #Get all participants in the operator conferences
-#     operators = {}
-#     query = 'SELECT * FROM activeCalls c WHERE c.data.service_tag = "' + oper.get('response', {}).get('result', {}).get('service_tag') + '"'
-#     operator_participants = db_help.db_query(db_events, query)
-    
-#     # Make a dict of operator conferences with the number of participants in each
-#     for p in operator_participants:
-#         if not p['data']['conference'] in operators:
-#             operators[p['data']['conference']] = 1
-#         else:
-#             operators[p['data']['conference']] += 1
-    
-#     # If no operator conferences, return the base operator name
-#     if not operators:
-#         return [oper.get('basename') + '1']
-    
-#     # If all operators are to be returned, return the keys of the dict.  Else find the operators where the fewest participants are
-#     if GetAll:
-#         operator = list(operators.keys())
-#     else:
-#         operator = [k for k, v in operators.items() if v==min(operators.values())]
-        
-#     return operator
 
 # Return the operator or multiple operators
 def get_operator(oper: dict) -> List:
@@ -95,43 +67,23 @@ def get_operator(oper: dict) -> List:
         
     return operator
         
-def call_operator(alias: str, oper: dict) -> None:
-    operator = get_operator(oper)[0]
-            
-    fqdn = os.environ["ManagementNodeFQDN"]
-    uname = os.environ["ManagementNodeUsername"]
-    pwd = os.environ["ManagementNodePassword"]
-    dial_location = os.environ["SIPDialLocation"]
-    dom = os.environ["SIPDialingDomain"]
-
-    api_dial = "/api/admin/command/v1/participant/dial/"
-    
-    data = {
-        'conference_alias': alias,
-        'destination': operator + '@' + dom,
-        'routing': 'manual',
-        'role': 'guest',
-        'remote_display_name': oper.get('display_name'),
-        'system_location': dial_location
-    }
-    
-    requests.post(fqdn + api_dial, auth=(uname, pwd), json=data)
-
 def find_operator(alias: str, oper: dict) -> None:
-    operator = get_operator(oper)
-            
-    fqdn = os.environ["ManagementNodeFQDN"]
-    uname = os.environ["ManagementNodeUsername"]
-    pwd = os.environ["ManagementNodePassword"]
-    dial_location = os.environ["SIPDialLocation"]
-    dom = os.environ["SIPDialingDomain"]
-
-    api_dial = "/api/admin/command/v1/participant/dial/"
+    #global api_clients
     
-    if len(operator) == 1:
+    operators = get_operator(oper)
+            
+    if len(operators) == 1:
+        fqdn = os.environ["ManagementNodeFQDN"]
+        uname = os.environ["ManagementNodeUsername"]
+        pwd = os.environ["ManagementNodePassword"]
+        dial_location = os.environ["SIPDialLocation"]
+        dom = os.environ["SIPDialingDomain"]
+
+        api_dial = "/api/admin/command/v1/participant/dial/"
+    
         data = {
             'conference_alias': alias,
-            'destination': operator[0] + '@' + dom,
+            'destination': operators[0] + '@' + dom,
             'routing': 'manual',
             'role': 'guest',
             'remote_display_name': oper.get('display_name'),
@@ -139,3 +91,12 @@ def find_operator(alias: str, oper: dict) -> None:
         }
     
         requests.post(fqdn + api_dial, auth=(uname, pwd), json=data)
+
+    elif operators:
+        fqdn = os.environ["ConferenceNodeFQDN"]
+        
+        for operator in operators:
+            if alias in api_clients:
+                api_clients['alias'].append(api_client(fqdn, operator, ''))
+            else:
+                api_clients['alias'] = [api_client(fqdn, operator, '')]
