@@ -91,7 +91,7 @@ def get_operator(oper: dict) -> List:
     if oper.get('dial_all', False):
         operator = list(operators.keys())
     else:
-        operator = [k for k, v in operators.items() if v==min(operators.values())][0]
+        operator = [k for k, v in operators.items() if v==min(operators.values())][:1]
         
     return operator
         
