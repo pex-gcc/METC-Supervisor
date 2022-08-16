@@ -31,7 +31,7 @@ def main(msg: func.QueueMessage) -> None:
         if alias:
             conf = None
             for c in config:
-                match = re.match(c['regex'], alias)
+                match = re.match(c['alias'], alias)
                 if match:
                     conf = c
                     break
