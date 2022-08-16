@@ -56,7 +56,7 @@ def get_operator(oper: dict, GetAll: Boolean = False) -> List:
     
     # If no operator conferences, return the base operator name
     if not operators:
-        return oper.get('basename') + '1'
+        return [oper.get('basename') + '1']
     
     # If all operators are to be returned, return the keys of the dict.  Else find the operators where the fewest participants are
     if GetAll:
