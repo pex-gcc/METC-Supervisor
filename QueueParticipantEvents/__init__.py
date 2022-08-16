@@ -36,8 +36,8 @@ def main(msg: func.QueueMessage) -> None:
                     conf = c
                     break
 
-            if conf and conf.get('type') == 'caller' and conf.get('connectoperator') and event.get('data', {}).get('call_direction') == 'in':
-                query = 'SELECT * FROM ControlConfig c WHERE c.response.result.service_tag = "' + conf.get('operatorname', '') + '"'
+            if conf and conf.get('operator') and event.get('data', {}).get('call_direction') == 'in':
+                query = 'SELECT * FROM ControlConfig c WHERE c.response.result.service_tag = "' + conf.get('operator', '') + '"'
                 oper_conf = db_help.db_query(db_config, query)
                 if oper_conf:
                     oper_conf = oper_conf[0]
