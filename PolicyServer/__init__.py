@@ -40,7 +40,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # Check local alias against config database
     else:
         for conf in config:
-            match = re.match(conf['regex'], local_alias)
+            match = re.match(conf['alias'], local_alias)
             if match:
                 policy_response = conf['response']
                 if 'basename' in conf and conf['basename'] and len(list(match.groups())) > 0:
