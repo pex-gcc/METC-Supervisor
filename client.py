@@ -73,7 +73,7 @@ def call_operator(alias: str, oper: dict) -> None:
     uname = os.environ["ManagementNodeUsername"]
     pwd = os.environ["ManagementNodePassword"]
     dial_location = os.environ["SIPDialLocation"]
-    dom = oper.get('domain')
+    dom = os.environ["SIPDialingDomain"]
 
     api_dial = "/api/admin/command/v1/participant/dial/"
     
