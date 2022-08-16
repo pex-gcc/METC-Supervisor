@@ -4,6 +4,9 @@ import requests
 import json
 import cosmosdb_helpers as db_help
 import os
+import validators
+import re
+import logging
 
 from threading import Timer
 
@@ -17,13 +20,14 @@ class api_client:
             self.ref.start()
 
     def __init__(self, fqdn: str, conf: str, pin: str, name: str = "API") -> None:
-        self.url_base = "https://" + fqdn + "/api/client/v2/conferences/" + conf 
+        self.url_base = fqdn + "/api/client/v2/conferences/" + conf 
         body = {"display_name": name}
         header = {"pin" : pin}
         resp = requests.post(self.url_base + "/request_token", json=body, headers=header)
-        self.get_token(resp)
-        self.uuid = json.loads(resp.text)['result']['participant_uuid']
-        self.conference = conf
+        if resp.status_code == 200:
+            self.get_token(resp)
+            self.uuid = json.loads(resp.text)['result']['participant_uuid']
+            self.conference = conf
 
     def __repr__(self) -> str:
         return self.uuid
@@ -37,6 +41,15 @@ class api_client:
         self.ref.cancel()
         header = {"token" : self.token}
         resp = requests.post(self.url_base + "/release_token", headers=header)
+
+def get_fqdn(fqdn: str) -> str:
+    prefix = r"^(https://|http://)?(.+)"
+    match = re.search(prefix, fqdn)
+    if not validators.domain(match.group(2)):
+        return None
+    if not match.group(1):
+        fqdn = 'https://' + fqdn
+    return fqdn
 
 # Return the operator or multiple operators
 def get_operator(oper: dict) -> List:
@@ -73,7 +86,7 @@ def find_operator(alias: str, oper: dict) -> None:
     operators = get_operator(oper)
             
     if len(operators) == 1:
-        fqdn = os.environ["ManagementNodeFQDN"]
+        fqdn = get_fqdn(os.environ["ManagementNodeFQDN"])
         uname = os.environ["ManagementNodeUsername"]
         pwd = os.environ["ManagementNodePassword"]
         dial_location = os.environ["SIPDialLocation"]
@@ -81,6 +94,10 @@ def find_operator(alias: str, oper: dict) -> None:
 
         api_dial = "/api/admin/command/v1/participant/dial/"
     
+        if not fqdn:
+            logging.info(f'Invalid value for ManagementNodeFQDN')
+            return
+
         data = {
             'conference_alias': alias,
             'destination': operators[0] + '@' + dom,
@@ -93,7 +110,10 @@ def find_operator(alias: str, oper: dict) -> None:
         requests.post(fqdn + api_dial, auth=(uname, pwd), json=data)
 
     elif operators:
-        fqdn = os.environ["ConferenceNodeFQDN"]
+        fqdn = get_fqdn(os.environ["ConferenceNodeFQDN"])
+        if not fqdn:
+            logging.info(f'Invalid value for ConferenceNodeFQDN')
+            return
         
         for operator in operators:
             if alias in api_clients:
