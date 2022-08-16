@@ -36,21 +36,29 @@ class api_client:
         header = {"token" : self.token}
         resp = requests.post(self.url_base + "/release_token", headers=header)
 
+
+# Return the operator or multiple operators
 def get_operator(oper: dict, GetAll: Boolean = False) -> List:
+    # Initialize events database
     db_events = db_help.db_init(os.environ['EventsDatabaseName'], os.environ['ActiveCallsContainerName'], '/data/service_tag')
     
+    #Get all participants in the operator conferences
     operators = {}
     query = 'SELECT * FROM activeCalls c WHERE c.data.service_tag = "' + oper.get('response', {}).get('result', {}).get('service_tag') + '"'
     operator_participants = db_help.db_query(db_events, query)
+    
+    # Make a dict of operator conferences with the number of participants in each
     for p in operator_participants:
         if not p['data']['conference'] in operators:
             operators[p['data']['conference']] = 1
         else:
             operators[p['data']['conference']] += 1
     
+    # If no operator conferences, return the base operator name
     if not operators:
         return oper.get('basename') + '1'
     
+    # If all operators are to be returned, return the keys of the dict.  Else find the operators where the fewest participants are
     if GetAll:
         operator = list(operators.keys())
     else:
@@ -58,28 +66,7 @@ def get_operator(oper: dict, GetAll: Boolean = False) -> List:
         
     return operator
         
-def call_operator(event: dict, oper: dict) -> None:
-    # Initialize "active calls" database    
-    # db_events = db_help.db_init(os.environ['EventsDatabaseName'], os.environ['ActiveCallsContainerName'], '/data/service_tag')
-    
-    # operators = {}
-    # query = 'SELECT * FROM activeCalls c WHERE c.data.service_tag = "' + oper.get('response', {}).get('result', {}).get('service_tag') + '"'
-    # operator_participants = db_help.db_query(db_events, query)
-    # for p in operator_participants:
-    #     if not p['data']['conference'] in operators:
-    #         operators[p['data']['conference']] = 1
-    #     else:
-    #         operators[p['data']['conference']] += 1
-    
-    
-    
-    # min_part = 1000
-    # operator = oper.get('basename') + '1'
-    # for o in operators.keys():
-    #     if operators[o] < min_part:
-    #         min_part = operators[o]
-    #         operator = o
-
+def call_operator(alias: str, oper: dict) -> None:
     operator = get_operator(oper)[0]
             
     fqdn = os.environ["ManagementNodeFQDN"]
@@ -91,7 +78,7 @@ def call_operator(event: dict, oper: dict) -> None:
     api_dial = "/api/admin/command/v1/participant/dial/"
     
     data = {
-        'conference_alias': event['data']['destination_alias'],
+        'conference_alias': alias,
         'destination': operator + '@' + dom,
         'routing': 'manual',
         'role': 'guest',
