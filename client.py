@@ -118,9 +118,9 @@ def find_operator(alias: str, oper: dict) -> None:
         
         for operator in operators:
             if alias in api_clients:
-                api_clients[alias].append(api_client(fqdn, operator, ''))
+                api_clients[alias].append(api_client(fqdn, operator, '', alias))
             else:
-                api_clients[alias] = [api_client(fqdn, operator, '')]
+                api_clients[alias] = [api_client(fqdn, operator, '', alias)]
                 
 def end_api(call_id: str) -> None:
     for alias in api_clients.keys():
