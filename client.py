@@ -80,13 +80,8 @@ def get_operator(oper: dict) -> List:
         operator = [k for k, v in operators.items() if v==min(operators.values())][:1]
         
     return operator
-        
-def find_operator(alias: str, oper: dict) -> None:
-#    global api_clients
-    
-    operators = get_operator(oper)
-            
-    if len(operators) == 1:
+
+def management_dial(from_alias: str, to_alias: str, display_name: str) -> None:
         fqdn = get_fqdn(os.environ["ManagementNodeFQDN"])
         uname = os.environ["ManagementNodeUsername"]
         pwd = os.environ["ManagementNodePassword"]
@@ -100,15 +95,44 @@ def find_operator(alias: str, oper: dict) -> None:
             return
 
         data = {
-            'conference_alias': alias,
-            'destination': operators[0] + '@' + dom,
+            'conference_alias': from_alias,
+            'destination': to_alias + '@' + dom,
             'routing': 'manual',
             'role': 'guest',
-            'remote_display_name': oper.get('display_name'),
+            'remote_display_name': display_name,
             'system_location': dial_location
         }
     
         requests.post(fqdn + api_dial, auth=(uname, pwd), json=data)
+        
+def find_operator(alias: str, oper: dict) -> None:
+    operators = get_operator(oper)
+            
+    if len(operators) == 1:
+        management_dial(alias, operators[0], oper.get('display_name'))
+        
+        # fqdn = get_fqdn(os.environ["ManagementNodeFQDN"])
+        # uname = os.environ["ManagementNodeUsername"]
+        # pwd = os.environ["ManagementNodePassword"]
+        # dial_location = os.environ["SIPDialLocation"]
+        # dom = os.environ["SIPDialingDomain"]
+
+        # api_dial = "/api/admin/command/v1/participant/dial/"
+    
+        # if not fqdn:
+        #     logging.info(f'Invalid value for ManagementNodeFQDN')
+        #     return
+
+        # data = {
+        #     'conference_alias': alias,
+        #     'destination': operators[0] + '@' + dom,
+        #     'routing': 'manual',
+        #     'role': 'guest',
+        #     'remote_display_name': oper.get('display_name'),
+        #     'system_location': dial_location
+        # }
+    
+        # requests.post(fqdn + api_dial, auth=(uname, pwd), json=data)
 
     elif operators:
         fqdn = get_fqdn(os.environ["ConferenceNodeFQDN"])
