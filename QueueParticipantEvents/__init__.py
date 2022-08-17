@@ -16,7 +16,7 @@ def main(msg: func.QueueMessage) -> None:
     config = db_help.db_query(db_config, 'SELECT * FROM ControlConfig')
 
     # Initialize "API calls" database
-    db_api = db_help.db_init(os.environ['EventsDatabaseName'], os.environ['APICallsContainerName'], '/data/destination_alias')
+    db_api = db_help.db_init(os.environ['EventsDatabaseName'], os.environ['APICallsContainerName'], '/data/display_name')
 
     # Get event json data from queue
     logging.info(f'Participant queue trigger processed new item: {msg.id}, inserted: {str(msg.insertion_time)}')
