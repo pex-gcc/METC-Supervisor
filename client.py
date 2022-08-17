@@ -81,7 +81,7 @@ def get_operator(oper: dict) -> List:
     return operator
         
 def find_operator(alias: str, oper: dict) -> None:
-    #global api_clients
+    global api_clients
     
     operators = get_operator(oper)
             
