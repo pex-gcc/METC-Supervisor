@@ -10,6 +10,7 @@ import logging
 
 from threading import Timer
 
+global api_clients
 api_clients = {}
 
 class api_client:
@@ -81,7 +82,7 @@ def get_operator(oper: dict) -> List:
     return operator
         
 def find_operator(alias: str, oper: dict) -> None:
-    global api_clients
+#    global api_clients
     
     operators = get_operator(oper)
             
@@ -117,13 +118,13 @@ def find_operator(alias: str, oper: dict) -> None:
         
         for operator in operators:
             if alias in api_clients:
-                api_clients['alias'].append(api_client(fqdn, operator, ''))
+                api_clients[alias].append(api_client(fqdn, operator, ''))
             else:
-                api_clients['alias'] = [api_client(fqdn, operator, '')]
+                api_clients[alias] = [api_client(fqdn, operator, '')]
                 
 def end_api(call_id: str) -> None:
     for alias in api_clients.keys():
-        if call_id in api_clients[alias]:
+        if call_id in [a.uuid for a in api_clients[alias]]:
             for client in api_clients[alias]:
                 client.release()
             del api_clients[alias]

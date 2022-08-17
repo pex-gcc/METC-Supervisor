@@ -16,7 +16,7 @@ def main(req: func.HttpRequest, QueueAllEvents: func.Out[str], QueueParticipantE
         event_type = event['event']
         logging.info(f'Event type is: {event_type}')
         
-        if event_type == 'participant_connected' or event_type == 'participant_disconnected':
+        if event_type == 'participant_connected' or event_type == 'participant_disconnected' or event_type == 'participant_updated':
             QueueParticipantEvents.set(request_body)
             logging.info(f'Incoming event sent to participants queue')
        

@@ -42,7 +42,11 @@ def db_delete(container: Container, event: dict) -> None:
         if k:
             pk = pk[k]
     if 'id' in event:
-        container.delete_item(item = event['id'], partition_key=pk)
+        try:
+            container.delete_item(item = event['id'], partition_key=pk)
+        except exceptions.CosmosResourceNotFoundError:
+            logging.info(f'Item does not exist.  Cannot delete.')
+            return
     else:
         logging.info(f'Item did not have id or partition key field to allow deletion.')
         logging.info(f'{event}')
