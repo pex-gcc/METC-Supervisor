@@ -54,5 +54,5 @@ def main(msg: func.QueueMessage) -> None:
         call_id = event.get('data', {}).get('call_id')
         query = 'SELECT * FROM ' + os.environ['APICallsContainerName'] + ' c WHERE c.id = "' + call_id + '"'
         api_call = db_help.db_query(db_api, query)
-        if api_call:
+        if api_call and event.get('data', {}).get('service_type') is not 'waiting_room':
             end_api(call_id)
