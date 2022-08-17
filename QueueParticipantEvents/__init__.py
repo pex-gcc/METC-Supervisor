@@ -30,6 +30,7 @@ def main(msg: func.QueueMessage) -> None:
         db_help.db_add(db_events, event)
         
         alias = event.get('data', {}).get('destination_alias')
+        conference = event.get('data', {}).get('conference')
         if alias:
             conf = None
             for c in config:
@@ -39,7 +40,7 @@ def main(msg: func.QueueMessage) -> None:
                     break
 
             if conf and conf.get('operator') and event.get('data', {}).get('call_direction') == 'in':
-                find_operator(alias, conf.get('operator'))
+                find_operator(alias, conference, conf.get('operator'))
 
         if event.get('data', {}).get('service_type') == 'waiting_room' and not event.get('data', {}).get('has_media'):
             db_help.db_add(db_api, event)

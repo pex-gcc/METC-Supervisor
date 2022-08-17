@@ -105,34 +105,11 @@ def management_dial(from_alias: str, to_alias: str, display_name: str) -> None:
     
         requests.post(fqdn + api_dial, auth=(uname, pwd), json=data)
         
-def find_operator(alias: str, oper: dict) -> None:
+def find_operator(alias: str, conference: str, oper: dict) -> None:
     operators = get_operator(oper)
             
     if len(operators) == 1:
         management_dial(alias, operators[0], oper.get('display_name'))
-        
-        # fqdn = get_fqdn(os.environ["ManagementNodeFQDN"])
-        # uname = os.environ["ManagementNodeUsername"]
-        # pwd = os.environ["ManagementNodePassword"]
-        # dial_location = os.environ["SIPDialLocation"]
-        # dom = os.environ["SIPDialingDomain"]
-
-        # api_dial = "/api/admin/command/v1/participant/dial/"
-    
-        # if not fqdn:
-        #     logging.info(f'Invalid value for ManagementNodeFQDN')
-        #     return
-
-        # data = {
-        #     'conference_alias': alias,
-        #     'destination': operators[0] + '@' + dom,
-        #     'routing': 'manual',
-        #     'role': 'guest',
-        #     'remote_display_name': oper.get('display_name'),
-        #     'system_location': dial_location
-        # }
-    
-        # requests.post(fqdn + api_dial, auth=(uname, pwd), json=data)
 
     elif operators:
         fqdn = get_fqdn(os.environ["ConferenceNodeFQDN"])
@@ -142,9 +119,9 @@ def find_operator(alias: str, oper: dict) -> None:
         
         for operator in operators:
             if alias in api_clients:
-                api_clients[alias].append(api_client(fqdn, operator, '', alias))
+                api_clients[alias].append(api_client(fqdn, operator, '', conference))
             else:
-                api_clients[alias] = [api_client(fqdn, operator, '', alias)]
+                api_clients[alias] = [api_client(fqdn, operator, '', conference)]
                 
 def end_api(call_id: str) -> None:
     for alias in api_clients.keys():
