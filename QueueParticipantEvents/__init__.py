@@ -13,8 +13,10 @@ def main(msg: func.QueueMessage) -> None:
 
     # Get call configuration
     db_config = db_help.db_init(os.environ['EventsDatabaseName'], os.environ['ConfigContainerName'], '/response/result/service_tag')
-
     config = db_help.db_query(db_config, 'SELECT * FROM ControlConfig')
+
+    # Initialize "API calls" database
+    db_api = db_help.db_init(os.environ['EventsDatabaseName'], os.environ['APICallsContainerName'], '/response/result/service_tag')
 
     # Get event json data from queue
     logging.info(f'Participant queue trigger processed new item: {msg.id}, inserted: {str(msg.insertion_time)}')
@@ -39,7 +41,10 @@ def main(msg: func.QueueMessage) -> None:
             if conf and conf.get('operator') and event.get('data', {}).get('call_direction') == 'in':
                 find_operator(alias, conf.get('operator'))
 
+        if event.get('data', {}).get('service_type') == 'waiting_room' and not event.get('data', {}).get('has_media'):
+            db_help.db_add(db_api, event)
+
     elif event_type == 'participant_disconnected':
         logging.info(f'Event type is {event_type}, deleting from active calls db ')
         db_help.db_delete(db_events, event)
-        
+        db_help.db_delete(db_api, event)
