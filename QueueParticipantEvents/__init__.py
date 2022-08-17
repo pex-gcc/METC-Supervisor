@@ -5,7 +5,7 @@ import re
 
 import azure.functions as func
 import cosmosdb_helpers as db_help
-from client import find_operator
+from client import find_operator, end_api
 
 def main(msg: func.QueueMessage) -> None:
     # Initialize "active calls" database    
@@ -13,7 +13,7 @@ def main(msg: func.QueueMessage) -> None:
 
     # Get call configuration
     db_config = db_help.db_init(os.environ['EventsDatabaseName'], os.environ['ConfigContainerName'], '/response/result/service_tag')
-    config = db_help.db_query(db_config, 'SELECT * FROM ControlConfig')
+    config = db_help.db_query(db_config, 'SELECT * FROM ' + os.environ['ConfigContainerName'])
 
     # Initialize "API calls" database
     db_api = db_help.db_init(os.environ['EventsDatabaseName'], os.environ['APICallsContainerName'], '/data/display_name')
@@ -48,3 +48,10 @@ def main(msg: func.QueueMessage) -> None:
         logging.info(f'Event type is {event_type}, deleting from active calls db ')
         db_help.db_delete(db_events, event)
         db_help.db_delete(db_api, event)
+        
+    elif event_type == 'participant_updated':
+        call_id = event.get('data', {}).get('call_id')
+        query = 'SELECT * FROM ' + os.environ['APICallsContainerName'] + ' c WHERE c.id = "' + call_id + '"'
+        api_call = db_help.db_query(db_api, query)
+        if api_call:
+            end_api(call_id)

@@ -58,7 +58,7 @@ def get_operator(oper: dict) -> List:
     
     #Get all participants in the operator conferences
     operators = {}
-    query = 'SELECT * FROM activeCalls c WHERE c.data.service_tag = "' + oper.get('name') + '"'
+    query = 'SELECT * FROM ' + os.environ['ActiveCallsContainerName'] + ' c WHERE c.data.service_tag = "' + oper.get('name') + '"'
     operator_participants = db_help.db_query(db_events, query)
     
     # Make a dict of operator conferences with the number of participants in each
@@ -120,3 +120,10 @@ def find_operator(alias: str, oper: dict) -> None:
                 api_clients['alias'].append(api_client(fqdn, operator, ''))
             else:
                 api_clients['alias'] = [api_client(fqdn, operator, '')]
+                
+def end_api(call_id: str) -> None:
+    for alias in api_clients.keys():
+        if call_id in api_clients[alias]:
+            for client in api_clients[alias]:
+                client.release()
+            del api_clients[alias]
