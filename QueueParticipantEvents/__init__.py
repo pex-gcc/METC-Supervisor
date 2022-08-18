@@ -54,7 +54,10 @@ def main(msg: func.QueueMessage) -> None:
         if event.get('data', {}).get('has_media') or event.get('data', {}).get('service_type') is not 'conference':
             return
         call_id = event.get('data', {}).get('call_id')
+        logging.info(f'Participant update event received for : ' + event.get('data', {}).get('display_name') + ' calling ' + event.get('data', {}).get('conference'))
+
         query = 'SELECT * FROM ' + os.environ['APICallsContainerName'] + ' c WHERE c.id = "' + call_id + '"'
         api_call = db_help.db_query(db_api, query)
         if api_call:
+            logging.info(f'End API event called for : ' + event.get('data', {}).get('display_name') + ' calling ' + event.get('data', {}).get('conference'))
             end_api(call_id)
