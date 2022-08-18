@@ -51,8 +51,10 @@ def main(msg: func.QueueMessage) -> None:
         db_help.db_delete(db_api, event)
         
     elif event_type == 'participant_updated':
+        if event.get('data', {}).get('has_media') or event.get('data', {}).get('service_type') is not 'conference':
+            return
         call_id = event.get('data', {}).get('call_id')
         query = 'SELECT * FROM ' + os.environ['APICallsContainerName'] + ' c WHERE c.id = "' + call_id + '"'
         api_call = db_help.db_query(db_api, query)
-        if api_call and event.get('data', {}).get('service_type') is not 'waiting_room':
+        if api_call:
             end_api(call_id)
