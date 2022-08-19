@@ -23,14 +23,15 @@ def main(msg: func.QueueMessage) -> None:
     db_api = db_help.db_init(os.environ['EventsDatabaseName'], os.environ['APICallsContainerName'], '/data/display_name')
 
     # Get event json data from queue
-    logging.info(f'Participant queue trigger processed new item: {msg.id}, inserted: {str(msg.insertion_time)}')
+    logging.info(f'QueueParticipantEvents.main: Participant queue trigger processed new item: {msg.id}, inserted: {str(msg.insertion_time)}')
     event_data =  msg.get_body()
     event = json.loads(event_data)
     event_type = event['event']
     event['id'] = event['data']['call_id']
+    id = event.get('id', '')
     
     if event_type == 'participant_connected':
-        logging.info(f'Event is type {event_type}, sending to active calls db')
+        logging.info(f'QueueParticipantEvents.main: Event {id} is type {event_type}, sending to active calls db')
         db_help.db_add(db_events, event)
         
         alias = event.get('data', {}).get('destination_alias')
@@ -45,12 +46,13 @@ def main(msg: func.QueueMessage) -> None:
 
             if conf and conf.get('operator') and event.get('data', {}).get('call_direction') == 'in':
                 api_clients = find_operator(alias, conference, conf.get('operator'), api_clients)
+                logging.info(f'QueueParticipantEvents.main: Number of existing API calls found after find_operator call: {len(api_clients.keys())}')
 
         if event.get('data', {}).get('service_type') == 'waiting_room' and not event.get('data', {}).get('has_media'):
             db_help.db_add(db_api, event)
 
     elif event_type == 'participant_disconnected':
-        logging.info(f'Event type is {event_type}, deleting from active calls db ')
+        logging.info(f'QueueParticipantEvents.main: Event {id} is type {event_type}, deleting from active calls db ')
         db_help.db_delete(db_events, event)
         db_help.db_delete(db_api, event)
         
@@ -58,10 +60,10 @@ def main(msg: func.QueueMessage) -> None:
         if event.get('data', {}).get('has_media') or event.get('data', {}).get('service_type') != 'conference':
             return
         call_id = event.get('data', {}).get('call_id')
-        logging.info(f'Participant update event received for : ' + event.get('data', {}).get('display_name') + ' calling ' + event.get('data', {}).get('conference'))
+        logging.info(f'QueueParticipantEvents.main: Participant update event received for : ' + event.get('data', {}).get('display_name') + ' calling ' + event.get('data', {}).get('conference'))
 
         query = 'SELECT * FROM ' + os.environ['APICallsContainerName'] + ' c WHERE c.id = "' + call_id + '"'
         api_call = db_help.db_query(db_api, query)
         if api_call:
-            logging.info(f'End API event called for : ' + event.get('data', {}).get('display_name') + ' calling ' + event.get('data', {}).get('conference'))
+            logging.info(f'QueueParticipantEvents.main: End API event called for : ' + event.get('data', {}).get('display_name') + ' calling ' + event.get('data', {}).get('conference'))
             api_clients = end_api(call_id, api_clients)

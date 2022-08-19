@@ -119,18 +119,20 @@ def find_operator(alias: str, conference: str, oper: dict, api_clients: List) ->
                 api_clients[alias].append(api_client(fqdn, operator, '', conference))
             else:
                 api_clients[alias] = [api_client(fqdn, operator, '', conference)]
+
+    logging.info(f'client.py.find_operator: Number of existing API calls found after creation: {len(api_clients.keys())}')
         
     return api_clients
 
 def end_api(call_id: str, api_clients: List) -> List:
-    logging.info(f'client.py: Deleting all API calls associated with call-id {call_id}')
-    logging.info(f'client.py: Number of existing API calls found: {len(api_clients.keys())}')
+    logging.info(f'client.py.end_api: Deleting all API calls associated with call-id {call_id}')
+    logging.info(f'client.py.end_api: Number of existing API calls found: {len(api_clients.keys())}')
 
     for alias in api_clients.keys():
         if call_id in [a.uuid for a in api_clients[alias]]:
-            logging.info(f'client.py: Accepted API call-id {call_id} found for conference {alias}')
+            logging.info(f'client.py.end_api: Accepted API call-id {call_id} found for conference {alias}')
             for client in api_clients[alias]:
-                logging.info(f'client.py: Ending API call {client.uuid}')
+                logging.info(f'client.py.end_api: Ending API call {client.uuid}')
                 client.release()
             del api_clients[alias]
             
