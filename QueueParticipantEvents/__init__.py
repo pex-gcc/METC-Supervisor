@@ -51,7 +51,7 @@ def main(msg: func.QueueMessage) -> None:
         db_help.db_delete(db_api, event)
         
     elif event_type == 'participant_updated':
-        if event.get('data', {}).get('has_media') or event.get('data', {}).get('service_type') is not 'conference':
+        if event.get('data', {}).get('has_media') or event.get('data', {}).get('service_type') != 'conference':
             return
         call_id = event.get('data', {}).get('call_id')
         logging.info(f'Participant update event received for : ' + event.get('data', {}).get('display_name') + ' calling ' + event.get('data', {}).get('conference'))
