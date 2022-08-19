@@ -90,7 +90,7 @@ def management_dial(from_alias: str, to_alias: str, display_name: str) -> None:
         api_dial = "/api/admin/command/v1/participant/dial/"
     
         if not fqdn:
-            logging.info(f'Invalid value for ManagementNodeFQDN')
+            logging.info(f'client.py: Invalid value for ManagementNodeFQDN')
             return
 
         data = {
@@ -115,7 +115,7 @@ def find_operator(alias: str, conference: str, oper: dict) -> None:
     elif operators:
         fqdn = get_fqdn(os.environ["ConferenceNodeFQDN"])
         if not fqdn:
-            logging.info(f'Invalid value for ConferenceNodeFQDN')
+            logging.info(f'client.py: Invalid value for ConferenceNodeFQDN')
             return
         
         for operator in operators:
@@ -127,8 +127,12 @@ def find_operator(alias: str, conference: str, oper: dict) -> None:
 def end_api(call_id: str) -> None:
     global api_clients
 
+    logging.info(f'client.py: Deleting all API calls associated with call-id {call_id}')
+
     for alias in api_clients.keys():
         if call_id in [a.uuid for a in api_clients[alias]]:
+            logging.info(f'client.py: Accepted API call-id {call_id} found for conference {alias}')
             for client in api_clients[alias]:
+                logging.info(f'client.py: Ending API call {client.uuid}')
                 client.release()
             del api_clients[alias]
