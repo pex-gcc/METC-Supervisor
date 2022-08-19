@@ -10,7 +10,6 @@ import logging
 
 from threading import Timer
 
-global api_clients
 api_clients = {}
 
 class api_client:
@@ -106,6 +105,8 @@ def management_dial(from_alias: str, to_alias: str, display_name: str) -> None:
         requests.post(fqdn + api_dial, auth=(uname, pwd), json=data)
         
 def find_operator(alias: str, conference: str, oper: dict) -> None:
+    global api_clients
+
     operators = get_operator(oper)
             
     if len(operators) == 1:
@@ -124,6 +125,8 @@ def find_operator(alias: str, conference: str, oper: dict) -> None:
                 api_clients[alias] = [api_client(fqdn, operator, '', conference)]
                 
 def end_api(call_id: str) -> None:
+    global api_clients
+
     for alias in api_clients.keys():
         if call_id in [a.uuid for a in api_clients[alias]]:
             for client in api_clients[alias]:
