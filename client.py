@@ -10,8 +10,6 @@ import logging
 
 from threading import Timer
 
-api_clients = {}
-
 class api_client:
     def get_token(self, resp: requests.Response) -> None:
         if resp.status_code == 200:
@@ -104,9 +102,7 @@ def management_dial(from_alias: str, to_alias: str, display_name: str) -> None:
     
         requests.post(fqdn + api_dial, auth=(uname, pwd), json=data)
         
-def find_operator(alias: str, conference: str, oper: dict) -> None:
-    global api_clients
-
+def find_operator(alias: str, conference: str, oper: dict, api_clients: List) -> List:
     operators = get_operator(oper)
             
     if len(operators) == 1:
@@ -116,17 +112,17 @@ def find_operator(alias: str, conference: str, oper: dict) -> None:
         fqdn = get_fqdn(os.environ["ConferenceNodeFQDN"])
         if not fqdn:
             logging.info(f'client.py: Invalid value for ConferenceNodeFQDN')
-            return
+            return api_clients
         
         for operator in operators:
             if alias in api_clients:
                 api_clients[alias].append(api_client(fqdn, operator, '', conference))
             else:
                 api_clients[alias] = [api_client(fqdn, operator, '', conference)]
-                
-def end_api(call_id: str) -> None:
-    global api_clients
+        
+    return api_clients
 
+def end_api(call_id: str, api_clients: List) -> List:
     logging.info(f'client.py: Deleting all API calls associated with call-id {call_id}')
     logging.info(f'client.py: Number of existing API calls found: {len(api_clients.keys())}')
 
@@ -137,3 +133,5 @@ def end_api(call_id: str) -> None:
                 logging.info(f'client.py: Ending API call {client.uuid}')
                 client.release()
             del api_clients[alias]
+            
+    return api_clients

@@ -7,7 +7,11 @@ import azure.functions as func
 import cosmosdb_helpers as db_help
 from client import find_operator, end_api
 
+api_clients = {}
+
 def main(msg: func.QueueMessage) -> None:
+    global api_clients
+    
     # Initialize "active calls" database    
     db_events = db_help.db_init(os.environ['EventsDatabaseName'], os.environ['ActiveCallsContainerName'], '/data/service_tag')
 
@@ -40,7 +44,7 @@ def main(msg: func.QueueMessage) -> None:
                     break
 
             if conf and conf.get('operator') and event.get('data', {}).get('call_direction') == 'in':
-                find_operator(alias, conference, conf.get('operator'))
+                api_clients = find_operator(alias, conference, conf.get('operator'), api_clients)
 
         if event.get('data', {}).get('service_type') == 'waiting_room' and not event.get('data', {}).get('has_media'):
             db_help.db_add(db_api, event)
@@ -60,4 +64,4 @@ def main(msg: func.QueueMessage) -> None:
         api_call = db_help.db_query(db_api, query)
         if api_call:
             logging.info(f'End API event called for : ' + event.get('data', {}).get('display_name') + ' calling ' + event.get('data', {}).get('conference'))
-            end_api(call_id)
+            api_clients = end_api(call_id, api_clients)
