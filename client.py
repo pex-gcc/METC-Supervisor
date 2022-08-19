@@ -14,7 +14,6 @@ class api_client:
     def get_token(self, resp: requests.Response) -> None:
         if resp.status_code == 200:
             self.token = json.loads(resp.text)['result']['token']
-            logging.info(f'api_client.get_token: New token for {self.uuid} is {self.token}')
             self.ref = Timer(40.0, self.refresh)
             self.ref.start()
 
@@ -33,7 +32,6 @@ class api_client:
         
     def refresh(self) -> None:
         header = {"token" : self.token}
-        logging.info(f'api_client.refresh: Token used for refresh for {self.uuid} is {self.token}')
         resp = requests.post(self.url_base + "/refresh_token", headers=header)
         self.get_token(resp)
 
