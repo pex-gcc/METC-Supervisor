@@ -128,6 +128,7 @@ def end_api(call_id: str) -> None:
     global api_clients
 
     logging.info(f'client.py: Deleting all API calls associated with call-id {call_id}')
+    logging.info(f'client.py: Number of existing API calls found: {len(api_clients.keys())}')
 
     for alias in api_clients.keys():
         if call_id in [a.uuid for a in api_clients[alias]]:
