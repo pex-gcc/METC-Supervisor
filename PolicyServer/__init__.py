@@ -14,7 +14,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('/service/configuration http trigger function processed a request.')
 
     # Initialize configuration database    
-    db_config = db_help.db_init(os.environ['EventsDatabaseName'], os.environ['ConfigContainerName'], '/response/result/service_tag')
+    db_config = db_help.db_init(os.environ.get('EventsDatabaseName'), os.environ.get('ConfigContainerName'), '/response/result/service_tag')
 
     config = db_help.db_query(db_config, 'SELECT * FROM ControlConfig')
 
@@ -40,11 +40,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # Check local alias against config database
     else:
         for conf in config:
-            match = re.match(conf['alias'], local_alias)
+            match = re.match(conf.get('alias', r'(?!x)x'), local_alias)
             if match:
-                policy_response = conf['response']
-                if 'basename' in conf and conf['basename'] and len(list(match.groups())) > 0:
-                    policy_response['result']['name'] = conf['basename'] + match.group(1)
+                policy_response = conf.get('response', None)
+                if policy_response and 'basename' in conf and conf.get('basename', None) and len(list(match.groups())) > 0:
+                    policy_response['result']['name'] = conf.get('basename') + match.group(1)
                 break
             
     # For anything else pass back to Pexip

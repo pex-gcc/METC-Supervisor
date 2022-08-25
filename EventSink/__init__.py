@@ -13,7 +13,7 @@ def main(req: func.HttpRequest, QueueAllEvents: func.Out[str], QueueParticipantE
 
     # Check event type and add or remove to active calls db
     if 'event' in event:    
-        event_type = event['event']
+        event_type = event.get('event', '')
         logging.info(f'Event type is: {event_type}')
         
         if event_type == 'participant_connected' or event_type == 'participant_disconnected' or event_type == 'participant_updated':
