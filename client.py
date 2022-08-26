@@ -18,10 +18,10 @@ class api_client:
             self.ref.start()
 
     def __init__(self, fqdn: str, conf: str, pin: str, name: str = "API") -> None:
-        self.url_base = fqdn + "/api/client/v2/conferences/" + conf 
+        self.url_base = f'{fqdn}/api/client/v2/conferences/{conf}'
         body = {"display_name": name}
         header = {"pin" : pin}
-        resp = requests.post(self.url_base + "/request_token", json=body, headers=header)
+        resp = requests.post(f'{self.url_base}/request_token', json=body, headers=header)
         if resp.status_code == 200:
             self.get_token(resp)
             self.uuid = json.loads(resp.text)['result']['participant_uuid']
@@ -32,13 +32,13 @@ class api_client:
         
     def refresh(self) -> None:
         header = {"token" : self.token}
-        resp = requests.post(self.url_base + "/refresh_token", headers=header)
+        resp = requests.post(f'{self.url_base}/refresh_token', headers=header)
         self.get_token(resp)
 
     def release(self) -> None:
         self.ref.cancel()
         header = {"token" : self.token}
-        resp = requests.post(self.url_base + "/release_token", headers=header)
+        resp = requests.post(f'{self.url_base}/release_token', headers=header)
 
 def get_fqdn(fqdn: str) -> str:
     prefix = r"^(https://|http://)?(.+)"
@@ -46,22 +46,32 @@ def get_fqdn(fqdn: str) -> str:
     if not validators.domain(match.group(2)):
         return None
     if not match.group(1):
-        fqdn = 'https://' + fqdn
+        fqdn = f'https://{fqdn}'
     return fqdn
 
 # Return the operator or multiple operators
 def get_operator(oper: dict) -> List:
+    events_db_name = os.environ.get('EventsDatabaseName', None)
+    if not events_db_name:
+        logging.info(f'PolicyServer: Missing config db name.  Check ''EventsDatabaseName'' environment variable')
+        return
+
+    activecalls_container_name = os.environ.get('ActiveCallsContainerName', None)
+    if not activecalls_container_name:
+        logging.info(f'PolicyServer: Missing config db name.  Check ''ActiveCallsContainerName'' environment variable')
+        return
+
     # Initialize events database
-    db_events = db_help.db_init(os.environ['EventsDatabaseName'], os.environ['ActiveCallsContainerName'], '/data/service_tag')
+    db_events = db_help.db_init(events_db_name, activecalls_container_name, '/data/service_tag')
     
     #Get all participants in the operator conferences
     operators = {}
-    query = 'SELECT * FROM ' + os.environ['ActiveCallsContainerName'] + ' c WHERE c.data.service_tag = "' + oper.get('name') + '"'
+    query = f'SELECT * FROM {activecalls_container_name} c WHERE c.data.service_tag = "{oper.get("name")}"'
     operator_participants = db_help.db_query(db_events, query)
     
     # Make a dict of operator conferences with the number of participants in each
     for p in operator_participants:
-        if not p['data']['conference'] in operators:
+        if not p.get('data', {}).get('conference') in operators:
             operators[p['data']['conference']] = 1
         else:
             operators[p['data']['conference']] += 1
@@ -79,28 +89,28 @@ def get_operator(oper: dict) -> List:
     return operator
 
 def management_dial(from_alias: str, to_alias: str, display_name: str) -> None:
-        fqdn = get_fqdn(os.environ["ManagementNodeFQDN"])
-        uname = os.environ["ManagementNodeUsername"]
-        pwd = os.environ["ManagementNodePassword"]
-        dial_location = os.environ["SIPDialLocation"]
-        dom = os.environ["SIPDialingDomain"]
+        fqdn = get_fqdn(os.environ.get('ManagementNodeFQDN'))
+        uname = os.environ.get('ManagementNodeUsername')
+        pwd = os.environ.get('ManagementNodePassword')
+        dial_location = os.environ.get('SIPDialLocation')
+        dom = os.environ.get('SIPDialingDomain')
 
-        api_dial = "/api/admin/command/v1/participant/dial/"
+        api_dial = f'/api/admin/command/v1/participant/dial/'
     
         if not fqdn:
-            logging.info(f'client.py: Invalid value for ManagementNodeFQDN')
+            logging.info(f'client.py.management_dial: Invalid value for ManagementNodeFQDN')
             return
 
         data = {
             'conference_alias': from_alias,
-            'destination': to_alias + '@' + dom,
+            'destination': f'{to_alias}@{dom}',
             'routing': 'manual',
             'role': 'guest',
             'remote_display_name': display_name,
             'system_location': dial_location
         }
     
-        requests.post(fqdn + api_dial, auth=(uname, pwd), json=data)
+        requests.post(f'{fqdn}{api_dial}', auth=(uname, pwd), json=data)
         
 def find_operator(alias: str, conference: str, oper: dict, api_clients: List) -> List:
     operators = get_operator(oper)
@@ -109,9 +119,9 @@ def find_operator(alias: str, conference: str, oper: dict, api_clients: List) ->
         management_dial(alias, operators[0], oper.get('display_name'))
 
     elif operators:
-        fqdn = get_fqdn(os.environ["ConferenceNodeFQDN"])
+        fqdn = get_fqdn(os.environ.get('ConferenceNodeFQDN'))
         if not fqdn:
-            logging.info(f'client.py: Invalid value for ConferenceNodeFQDN')
+            logging.info(f'client.py.find_operator: Invalid value for ConferenceNodeFQDN')
             return api_clients
         
         for operator in operators:
