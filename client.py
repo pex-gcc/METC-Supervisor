@@ -53,12 +53,12 @@ def get_fqdn(fqdn: str) -> str:
 def get_operator(oper: dict) -> List:
     events_db_name = os.environ.get('EventsDatabaseName', None)
     if not events_db_name:
-        logging.info(f'PolicyServer: Missing config db name.  Check ''EventsDatabaseName'' environment variable')
+        logging.info(f'client.get_operator: Missing config db name.  Check ''EventsDatabaseName'' environment variable')
         return
 
     activecalls_container_name = os.environ.get('ActiveCallsContainerName', None)
     if not activecalls_container_name:
-        logging.info(f'PolicyServer: Missing config db name.  Check ''ActiveCallsContainerName'' environment variable')
+        logging.info(f'client.get_operator: Missing active calls container name.  Check ''ActiveCallsContainerName'' environment variable')
         return
 
     # Initialize events database
