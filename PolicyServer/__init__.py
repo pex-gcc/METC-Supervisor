@@ -10,13 +10,6 @@ import os
 # This function reads request from Pexip and returns service configuration
 def main(req: func.HttpRequest) -> func.HttpResponse:
     policy_response = None
-    
-    logging.info('/service/configuration http trigger function processed a request.')
-
-    # Initialize configuration database    
-    db_config = db_help.db_init(os.environ.get('EventsDatabaseName'), os.environ.get('ConfigContainerName'), '/response/result/service_tag')
-
-    config = db_help.db_query(db_config, 'SELECT * FROM ControlConfig')
 
     # response to reject call
     policy_reponse_reject = {
@@ -29,6 +22,31 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         "status" : "success",
         "action" : "continue"
         }
+
+    logging.info(f'PolicyServer: /service/configuration http trigger function processed a request.')
+
+    config_db_name = os.environ.get('EventsDatabaseName', None)
+    if not config_db_name:
+        logging.info(f'PolicyServer: Missing config db name.  Check ''EventsDatabaseName'' environment variable')
+        return func.HttpResponse(
+           json.dumps(policy_response_continue),
+            mimetype='application/json',
+            status_code=200
+        )
+    
+    config_container_name = os.environ.get('ConfigContainerName', None)
+    if not config_container_name:
+        logging.info(f'PolicyServer: Missing config container name.  Check ''ConfigContainerName'' environment variable')
+        return func.HttpResponse(
+           json.dumps(policy_response_continue),
+            mimetype='application/json',
+            status_code=200
+        )
+    
+    # Initialize configuration database    
+    db_config = db_help.db_init(config_db_name, config_container_name, '/response/result/service_tag')
+
+    config = db_help.db_query(db_config, 'SELECT * FROM ControlConfig')
 
     # Get local alias from passed-in parameters    
     local_alias = req.params.get('local_alias')
