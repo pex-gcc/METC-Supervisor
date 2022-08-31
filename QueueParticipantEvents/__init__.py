@@ -36,7 +36,7 @@ def main(msg: func.QueueMessage) -> None:
     db_events = db_help.db_init(events_db_name, activecalls_container_name, '/data/service_tag')
 
     # Get call configuration
-    db_config = db_help.db_initevents_db_name, config_container_name, '/response/result/service_tag')
+    db_config = db_help.db_init(events_db_name, config_container_name, '/response/result/service_tag')
     config = db_help.db_query(db_config, f'SELECT * FROM {config_container_name}')
 
     # Initialize "API calls" database
