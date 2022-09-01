@@ -1,4 +1,4 @@
-from typing import List
+from typing import Container, List
 from xmlrpc.client import Boolean
 import requests
 import json
@@ -146,7 +146,7 @@ async def call_operators(call_info: dict, client: df.DurableOrchestrationClient)
                 db_help.db_add(db_api, client_info)        
     return
 
-def end_api(call_id: str, client: df.DurableOrchestrationClient) -> None:
+def end_api(call_id: str, db_api: Container, client: df.DurableOrchestrationClient) -> None:
     logging.info(f'client.py.end_api: Deleting all API calls associated with call-id {call_id}')
     # logging.info(f'client.py.end_api: Number of existing API calls found: {len(api_clients.keys())}')
 
@@ -155,11 +155,11 @@ def end_api(call_id: str, client: df.DurableOrchestrationClient) -> None:
         logging.info(f'client.py.find_operator: Invalid value for ConferenceNodeFQDN')
         return
 
-    events_db_name = get_env('EventsDatabaseName')
+    # events_db_name = get_env('EventsDatabaseName')
     apitoken_container_name = get_env('APITokenContainerName')
 
     # Initialize events database
-    db_api = db_help.db_init(events_db_name, apitoken_container_name, '/operator')
+    # db_api = db_help.db_init(events_db_name, apitoken_container_name, '/operator')
     this_call = db_help.db_query(db_api, f'SELECT * FROM {apitoken_container_name} c WHERE c.id = "{call_id}"')[0]
     operator = this_call.get('operator')
     caller = this_call.get('caller')

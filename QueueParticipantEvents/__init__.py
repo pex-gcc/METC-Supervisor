@@ -18,7 +18,7 @@ async def main(msg: func.QueueMessage, APIOrchestrationClient: str) -> None:
 
     # Get configuration info
     config = db_help.db_query(db_config, f'SELECT * FROM {config_container_name}')
-
+    
     # Get event json data from queue
     logging.info(f'QueueParticipantEvents.main: Participant queue trigger processed new item: {msg.id}, inserted: {str(msg.insertion_time)}')
     event_data =  msg.get_body()
@@ -70,4 +70,4 @@ async def main(msg: func.QueueMessage, APIOrchestrationClient: str) -> None:
             api_call = db_help.db_query(db_api, query)
             if api_call:
                 logging.info(f'QueueParticipantEvents.main: End API event called for : {event.get("data", {}).get("display_name")} calling {event.get("data", {}).get("conference")}')
-                end_api(call_id, client)
+                end_api(call_id, db_api, client)
