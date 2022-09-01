@@ -7,11 +7,7 @@ import azure.durable_functions as df
 import cosmosdb_helpers as db_help
 from client import call_operators, end_api, get_env
 
-api_clients = {}
-
 async def main(msg: func.QueueMessage, APIOrchestrationClient: str) -> None:
-    global api_clients
-
     events_db_name = get_env('EventsDatabaseName')
     activecalls_container_name = get_env('ActiveCallsContainerName')
     config_container_name = get_env('ConfigContainerName')
@@ -35,13 +31,13 @@ async def main(msg: func.QueueMessage, APIOrchestrationClient: str) -> None:
         return
     
     client = df.DurableOrchestrationClient(APIOrchestrationClient)
-    #instance_id = await client.start_new('APIClientOrchestrator', None, "test")
     
     if event_type == 'participant_connected':
         logging.info(f'QueueParticipantEvents.main: Event {id} is type {event_type}, sending to active calls db')
         db_help.db_add(db_events, event)
         
-        alias = event.get('data', {}).get('destination_alias')
+        # alias = event.get('data', {}).get('destination_alias')
+        alias = event.get('data', {}).get('alias')
         conference = event.get('data', {}).get('conference')
         if alias:
             conf = None
@@ -52,9 +48,7 @@ async def main(msg: func.QueueMessage, APIOrchestrationClient: str) -> None:
                     break
 
             if conf and conf.get('operator') and event.get('data', {}).get('call_direction') == 'in':
-                # api_clients = call_operators(alias, conference, conf.get('operator'), api_clients)
                 await call_operators(alias, conference, conf.get('operator'), client)
-                logging.info(f'QueueParticipantEvents.main: Number of existing API calls found after find_operator call: {len(api_clients.keys())}')
 
     elif event_type == 'participant_disconnected':
         logging.info(f'QueueParticipantEvents.main: Event {id} is type {event_type}, deleting from active calls db ')
