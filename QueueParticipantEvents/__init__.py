@@ -38,10 +38,8 @@ async def main(msg: func.QueueMessage, APIOrchestrationClient: str) -> None:
         
         call_info = {}
         call_info['destination_alias'] = event.get('data', {}).get('destination_alias')
-        
-        # alias = event.get('data', {}).get('destination_alias')
-        call_info['alias'] = event.get('data', {}).get('alias')
         call_info['conference'] = event.get('data', {}).get('conference')
+
         if call_info.get('destination_alias', None):
             conf = None
             for c in config:

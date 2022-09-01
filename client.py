@@ -130,7 +130,7 @@ async def call_operators(call_info: dict, client: df.DurableOrchestrationClient)
 
         # Initialize events database
         db_api = db_help.db_init(events_db_name, apitoken_container_name, '/operator')
-        body = {'display_name': call_info.get('alias')}
+        body = {'display_name': call_info.get('conference')}
         header = {'pin' : ''}
             
         for operator in operators:
