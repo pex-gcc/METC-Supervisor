@@ -1,12 +1,17 @@
 {
-    "scriptFile": "__init__.py",
-    "bindings": [
-      {
-        "name": "msg",
-        "type": "queueTrigger",
-        "direction": "in",
-        "queueName": "pxpartevents",
-        "connection": "QueueStorageAccount"
-      }
-    ]
+  "scriptFile": "__init__.py",
+  "bindings": [
+    {
+      "name": "msg",
+      "type": "queueTrigger",
+      "direction": "in",
+      "queueName": "pxpartevents",
+      "connection": "QueueStorageAccount"
+    },
+    {
+      "type": "orchestrationClient",
+      "direction": "in",
+      "name": "APIOrchestrationClient"
+    }
+  ]
 }

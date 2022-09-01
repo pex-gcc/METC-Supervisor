@@ -1,46 +1,27 @@
 import logging
 import json
-import os
 import re
 
 import azure.functions as func
+import azure.durable_functions as df
 import cosmosdb_helpers as db_help
-from client import find_operator, end_api
+from client import call_operators, end_api, get_env
 
 api_clients = {}
 
-def main(msg: func.QueueMessage) -> None:
+async def main(msg: func.QueueMessage, APIOrchestrationClient: str) -> None:
     global api_clients
 
-    events_db_name = os.environ.get('EventsDatabaseName', None)
-    if not events_db_name:
-        logging.info(f'QueueParticipantEvents: Missing config db name.  Check ''EventsDatabaseName'' environment variable')
-        return
+    events_db_name = get_env('EventsDatabaseName')
+    activecalls_container_name = get_env('ActiveCallsContainerName')
+    config_container_name = get_env('ConfigContainerName')
 
-    activecalls_container_name = os.environ.get('ActiveCallsContainerName', None)
-    if not activecalls_container_name:
-        logging.info(f'QueueParticipantEvents: Missing active calls container name.  Check ''ActiveCallsContainerName'' environment variable')
-        return
-    
-    config_container_name = os.environ.get('ConfigContainerName', None)
-    if not config_container_name:
-        logging.info(f'QueueParticipantEvents: Missing config container name.  Check ''ConfigContainerName'' environment variable')
-        return
-
-    apicalls_container_name = os.environ.get('APICallsContainerName', None)
-    if not apicalls_container_name:
-        logging.info(f'QueueParticipantEvents: Missing API calls container name.  Check ''APICallsContainerName'' environment variable')
-        return
-
-    # Initialize "active calls" database    
+    # Initialize databases
     db_events = db_help.db_init(events_db_name, activecalls_container_name, '/data/service_tag')
-
-    # Get call configuration
     db_config = db_help.db_init(events_db_name, config_container_name, '/response/result/service_tag')
-    config = db_help.db_query(db_config, f'SELECT * FROM {config_container_name}')
 
-    # Initialize "API calls" database
-    db_api = db_help.db_init(events_db_name, apicalls_container_name, '/data/display_name')
+    # Get configuration info
+    config = db_help.db_query(db_config, f'SELECT * FROM {config_container_name}')
 
     # Get event json data from queue
     logging.info(f'QueueParticipantEvents.main: Participant queue trigger processed new item: {msg.id}, inserted: {str(msg.insertion_time)}')
@@ -52,6 +33,9 @@ def main(msg: func.QueueMessage) -> None:
     
     if not id:
         return
+    
+    client = df.DurableOrchestrationClient(APIOrchestrationClient)
+    #instance_id = await client.start_new('APIClientOrchestrator', None, "test")
     
     if event_type == 'participant_connected':
         logging.info(f'QueueParticipantEvents.main: Event {id} is type {event_type}, sending to active calls db')
@@ -68,16 +52,13 @@ def main(msg: func.QueueMessage) -> None:
                     break
 
             if conf and conf.get('operator') and event.get('data', {}).get('call_direction') == 'in':
-                api_clients = find_operator(alias, conference, conf.get('operator'), api_clients)
+                # api_clients = call_operators(alias, conference, conf.get('operator'), api_clients)
+                await call_operators(alias, conference, conf.get('operator'), client)
                 logging.info(f'QueueParticipantEvents.main: Number of existing API calls found after find_operator call: {len(api_clients.keys())}')
-
-        if event.get('data', {}).get('service_type') == 'waiting_room' and not event.get('data', {}).get('has_media'):
-            db_help.db_add(db_api, event)
 
     elif event_type == 'participant_disconnected':
         logging.info(f'QueueParticipantEvents.main: Event {id} is type {event_type}, deleting from active calls db ')
         db_help.db_delete(db_events, event)
-        db_help.db_delete(db_api, event)
         
     elif event_type == 'participant_updated':
         if event.get('data', {}).get('has_media') or event.get('data', {}).get('service_type') != 'conference':
@@ -85,8 +66,12 @@ def main(msg: func.QueueMessage) -> None:
         call_id = event.get('data', {}).get('call_id')
         logging.info(f'QueueParticipantEvents.main: Participant update event received for : {event.get("data", {}).get("display_name")} calling {event.get("data", {}).get("conference")}')
 
-        query = f'SELECT * FROM {os.environ.get("APICallsContainerName")} c WHERE c.id = "{call_id}"'
-        api_call = db_help.db_query(db_api, query)
-        if api_call:
-            logging.info(f'QueueParticipantEvents.main: End API event called for : {event.get("data", {}).get("display_name")} calling {event.get("data", {}).get("conference")}')
-            api_clients = end_api(call_id, api_clients)
+        if call_id:
+            apitokens_container_name = get_env('APITokenContainerName')
+            db_api = db_help.db_init(events_db_name, apitokens_container_name, '/operator')
+            
+            query = f'SELECT * FROM {apitokens_container_name} c WHERE c.id = "{call_id}"'
+            api_call = db_help.db_query(db_api, query)
+            if api_call:
+                logging.info(f'QueueParticipantEvents.main: End API event called for : {event.get("data", {}).get("display_name")} calling {event.get("data", {}).get("conference")}')
+                end_api(call_id, client)
