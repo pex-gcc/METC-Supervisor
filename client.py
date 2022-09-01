@@ -113,11 +113,11 @@ def management_dial(from_alias: str, to_alias: str, display_name: str) -> None:
     
         requests.post(f'{fqdn}{api_dial}', auth=(uname, pwd), json=data)
         
-async def call_operators(alias: str, conference: str, oper: dict, client: df.DurableOrchestrationClient) -> None:
-    operators = get_operator(oper)
+async def call_operators(call_info: dict, client: df.DurableOrchestrationClient) -> None:
+    operators = get_operator(call_info.get('operator'))
             
     if len(operators) == 1:
-        management_dial(alias, operators[0], oper.get('display_name'))
+        management_dial(call_info.get('destination_alias'), operators[0], call_info.get('operator', {}).get('display_name'))
 
     elif operators:
         fqdn = get_fqdn(get_env('ConferenceNodeFQDN'))
@@ -130,12 +130,12 @@ async def call_operators(alias: str, conference: str, oper: dict, client: df.Dur
 
         # Initialize events database
         db_api = db_help.db_init(events_db_name, apitoken_container_name, '/operator')
-        body = {'display_name': alias}
+        body = {'display_name': call_info.get('alias')}
         header = {'pin' : ''}
             
         for operator in operators:
             url_base = f'{fqdn}/api/client/v2/conferences/{operator}'
-            client_info = {'fqdn' : fqdn, 'caller' : conference, 'pin' : '', 'operator' : operator}
+            client_info = {'fqdn' : fqdn, 'caller' : call_info.get('conference'), 'pin' : '', 'operator' : operator}
 
             resp = requests.post(f'{url_base}/request_token', json=body, headers=header)
             if resp.status_code == 200:

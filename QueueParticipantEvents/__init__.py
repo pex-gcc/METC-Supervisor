@@ -36,19 +36,23 @@ async def main(msg: func.QueueMessage, APIOrchestrationClient: str) -> None:
         logging.info(f'QueueParticipantEvents.main: Event {id} is type {event_type}, sending to active calls db')
         db_help.db_add(db_events, event)
         
+        call_info = {}
+        call_info['destination_alias'] = event.get('data', {}).get('destination_alias')
+        
         # alias = event.get('data', {}).get('destination_alias')
-        alias = event.get('data', {}).get('alias')
-        conference = event.get('data', {}).get('conference')
-        if alias:
+        call_info['alias'] = event.get('data', {}).get('alias')
+        call_info['conference'] = event.get('data', {}).get('conference')
+        if call_info.get('destination_alias', None):
             conf = None
             for c in config:
-                match = re.match(c.get('alias'), alias)
+                match = re.match(c.get('alias'), call_info.get('destination_alias'))
                 if match:
                     conf = c
                     break
-
+            
+            call_info['operator'] = conf.get('operator', None)
             if conf and conf.get('operator') and event.get('data', {}).get('call_direction') == 'in':
-                await call_operators(alias, conference, conf.get('operator'), client)
+                await call_operators(call_info, client)
 
     elif event_type == 'participant_disconnected':
         logging.info(f'QueueParticipantEvents.main: Event {id} is type {event_type}, deleting from active calls db ')
