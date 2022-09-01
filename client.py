@@ -1,5 +1,8 @@
 from typing import Container, List
 from xmlrpc.client import Boolean
+from threading import Timer
+from datetime import datetime, timedelta
+
 import requests
 import json
 import cosmosdb_helpers as db_help
@@ -7,9 +10,8 @@ import os
 import validators
 import re
 import logging
-
-from threading import Timer
 import azure.durable_functions as df
+
 
 # class api_client:
 #     def get_token(self, resp: requests.Response) -> None:
@@ -141,14 +143,14 @@ async def call_operators(call_info: dict, client: df.DurableOrchestrationClient)
             if resp.status_code == 200:
                 client_info['token'] = json.loads(resp.text).get('result', {}).get('token')
                 client_info['id'] = json.loads(resp.text).get('result', {}).get('participant_uuid')
-                # client_info['instance_id'] = await client.start_new('APIClientOrchestrator', None, client_info)
+                client_info['next_update'] = datetime.strftime(datetime.now() + timedelta(seconds=40), '%Y-%m-%d %H:%M:%S.%f')
+                client_info['instance_id'] = await client.start_new('APIClientOrchestrator', None, client_info)
 
                 db_help.db_add(db_api, client_info)        
     return
 
 def end_api(call_id: str, db_api: Container, client: df.DurableOrchestrationClient) -> None:
     logging.info(f'client.py.end_api: Deleting all API calls associated with call-id {call_id}')
-    # logging.info(f'client.py.end_api: Number of existing API calls found: {len(api_clients.keys())}')
 
     fqdn = get_fqdn(get_env('ConferenceNodeFQDN'))
     if not fqdn:
@@ -170,7 +172,7 @@ def end_api(call_id: str, db_api: Container, client: df.DurableOrchestrationClie
         header = {"token" : call.get('token')}
         resp = requests.post(f'{url_base}/release_token', headers=header)
         if resp.status_code == 200:
-            # client.terminate(instance_id=call.instance_id, reason="Call ended")
+            client.terminate(call.get('instance_id'), "Call ended")
             db_help.db_delete(db_api, call)        
             
     return

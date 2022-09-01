@@ -2,7 +2,7 @@ import os
 import logging
 from typing import Container, Iterable
 
-from azure.cosmos import exceptions, CosmosClient, PartitionKey
+from azure.cosmos import exceptions, CosmosClient, PartitionKey, ContainerProxy
 
 def get_client() -> CosmosClient:
     # Get Cosmos client from 'DatabaseEndpoint' environment variable, which is Cosmos endpoint
@@ -16,7 +16,7 @@ def get_client() -> CosmosClient:
         raise exceptions.CosmosResourceNotFoundError(message="Missing endpoint or key in request - verify 'DatabaseEndpoint' environment variable")    
 
 # Get database container
-def db_init(database_name: str, container_name: str, partition_key: str) -> Container:
+def db_init(database_name: str, container_name: str, partition_key: str) -> ContainerProxy:
     client = get_client()
     
     # Get the database object, create database if it doesn't exist
