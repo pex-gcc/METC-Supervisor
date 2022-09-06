@@ -165,6 +165,7 @@ def end_api(call_id: str, db_api: Container, client: df.DurableOrchestrationClie
     this_call = db_help.db_query(db_api, f'SELECT * FROM {apitoken_container_name} c WHERE c.id = "{call_id}"')[0]
     operator = this_call.get('operator')
     caller = this_call.get('caller')
+    management_dial(caller, operator, 'STS Operator')
     calls = db_help.db_query(db_api, f'SELECT * FROM {apitoken_container_name} c WHERE c.caller = "{caller}"')
 
     for call in calls:
