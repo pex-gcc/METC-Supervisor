@@ -137,7 +137,7 @@ async def call_operators(call_info: dict, client: df.DurableOrchestrationClient)
             
         for operator in operators:
             url_base = f'{fqdn}/api/client/v2/conferences/{operator}'
-            client_info = {'fqdn' : fqdn, 'caller' : call_info.get('conference'), 'pin' : '', 'operator' : operator}
+            client_info = {'fqdn' : fqdn, 'caller' : call_info.get('destination_alias'), 'pin' : '', 'operator' : operator, 'display_name' : call_info.get('operator', {}).get('display_name')}
 
             resp = requests.post(f'{url_base}/request_token', json=body, headers=header)
             if resp.status_code == 200:
@@ -165,7 +165,7 @@ def end_api(call_id: str, db_api: Container, client: df.DurableOrchestrationClie
     this_call = db_help.db_query(db_api, f'SELECT * FROM {apitoken_container_name} c WHERE c.id = "{call_id}"')[0]
     operator = this_call.get('operator')
     caller = this_call.get('caller')
-    management_dial(caller, operator, 'STS Operator')
+    management_dial(caller, operator, this_call.get('display_name', 'API'))
     calls = db_help.db_query(db_api, f'SELECT * FROM {apitoken_container_name} c WHERE c.caller = "{caller}"')
 
     for call in calls:
