@@ -157,23 +157,23 @@ def end_api(call_id: str, db_api: Container, client: df.DurableOrchestrationClie
         logging.info(f'client.py.find_operator: Invalid value for ConferenceNodeFQDN')
         return
 
-    # events_db_name = get_env('EventsDatabaseName')
     apitoken_container_name = get_env('APITokenContainerName')
 
     # Initialize events database
-    # db_api = db_help.db_init(events_db_name, apitoken_container_name, '/operator')
-    this_call = db_help.db_query(db_api, f'SELECT * FROM {apitoken_container_name} c WHERE c.id = "{call_id}"')[0]
-    operator = this_call.get('operator')
-    caller = this_call.get('caller')
-    management_dial(caller, operator, this_call.get('display_name', 'API'))
-    calls = db_help.db_query(db_api, f'SELECT * FROM {apitoken_container_name} c WHERE c.caller = "{caller}"')
+    api_calls = db_help.db_query(db_api, f'SELECT * FROM {apitoken_container_name} c WHERE c.id = "{call_id}"')
+    if api_calls:
+        this_call = api_calls[0]
+        operator = this_call.get('operator')
+        caller = this_call.get('caller')
+        management_dial(caller, operator, this_call.get('display_name', 'API'))
+        calls = db_help.db_query(db_api, f'SELECT * FROM {apitoken_container_name} c WHERE c.caller = "{caller}"')
 
-    for call in calls:
-        url_base = f'{fqdn}/api/client/v2/conferences/{call.get("operator")}'
-        header = {"token" : call.get('token')}
-        resp = requests.post(f'{url_base}/release_token', headers=header)
-        if resp.status_code == 200:
-            client.terminate(call.get('instance_id'), "Call ended")
-            db_help.db_delete(db_api, call)        
+        for call in calls:
+            url_base = f'{fqdn}/api/client/v2/conferences/{call.get("operator")}'
+            header = {"token" : call.get('token')}
+            resp = requests.post(f'{url_base}/release_token', headers=header)
+            if resp.status_code == 200:
+                client.terminate(call.get('instance_id'), "Call ended")
+                db_help.db_delete(db_api, call)        
             
     return
