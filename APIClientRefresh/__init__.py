@@ -19,13 +19,15 @@ def main(CallInfo: dict) -> dict:
 
         # Initialize events database
         db_api = db_help.db_init(events_db_name, apitoken_container_name, '/operator')
-        call = db_help.db_query(db_api, f'SELECT * FROM {apitoken_container_name} c WHERE c.id = "{CallInfo.get("id")}"')[0]
+        calls = db_help.db_query(db_api, f'SELECT * FROM {apitoken_container_name} c WHERE c.id = "{CallInfo.get("id")}"')
+        if calls:
+            call = calls[0]
 
-        header = {"token" : CallInfo.get('token')}
-        url_base = f'{CallInfo.get("fqdn")}/api/client/v2/conferences/{CallInfo.get("operator")}'
-        resp = requests.post(f'{url_base}/refresh_token', headers=header)
-        if resp.status_code == 200:
-            CallInfo['token'] = json.loads(resp.text).get('result', {}).get('token')
-            db_api.replace_item(item=call, body=CallInfo)
+            header = {"token" : CallInfo.get('token')}
+            url_base = f'{CallInfo.get("fqdn")}/api/client/v2/conferences/{CallInfo.get("operator")}'
+            resp = requests.post(f'{url_base}/refresh_token', headers=header)
+            if resp.status_code == 200:
+                CallInfo['token'] = json.loads(resp.text).get('result', {}).get('token')
+                db_api.replace_item(item=call, body=CallInfo)
 
         return CallInfo
