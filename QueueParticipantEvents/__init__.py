@@ -50,6 +50,7 @@ async def main(msg: func.QueueMessage, APIOrchestrationClient: str) -> None:
             
             call_info['operator'] = conf.get('operator', None)
             if conf and conf.get('operator') and event.get('data', {}).get('call_direction') == 'in':
+                logging.info(f'QueueParticipantEvents.main: Calling operators from {call_info.get("destination_alias", "")} to {call_info.get("conference", "")}')
                 await call_operators(call_info, client)
 
     elif event_type == 'participant_disconnected':

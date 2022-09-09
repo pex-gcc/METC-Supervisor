@@ -145,6 +145,7 @@ async def call_operators(call_info: dict, client: df.DurableOrchestrationClient)
                 client_info['id'] = json.loads(resp.text).get('result', {}).get('participant_uuid')
                 client_info['next_update'] = datetime.strftime(datetime.now() + timedelta(seconds=40), '%Y-%m-%d %H:%M:%S.%f')
                 client_info['instance_id'] = await client.start_new('APIClientOrchestrator', None, client_info)
+                client.start_new()
 
                 db_help.db_add(db_api, client_info)        
     return
