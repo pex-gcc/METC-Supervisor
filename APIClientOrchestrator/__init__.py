@@ -18,6 +18,6 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
         call_info['next_update'] = datetime.strftime(context.current_utc_datetime + timedelta(seconds=40), '%Y-%m-%d %H:%M:%S.%f')
         call_info = yield context.call_activity('APIClientRefresh', call_info)
         
-        context.continue_as_new(call_info)
+#        context.continue_as_new(call_info)
 
 main = df.Orchestrator.create(orchestrator_function)
