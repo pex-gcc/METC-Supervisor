@@ -3,7 +3,6 @@
 # Manually managing azure-functions-worker may cause unexpected issues
 
 azure-functions==1.11.0
-azure-functions-durable
 azure-cosmos
 requests
 validators

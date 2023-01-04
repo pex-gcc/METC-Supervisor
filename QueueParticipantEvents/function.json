@@ -7,11 +7,6 @@
       "direction": "in",
       "queueName": "pxpartevents",
       "connection": "QueueStorageAccount"
-    },
-    {
-      "type": "orchestrationClient",
-      "direction": "in",
-      "name": "APIOrchestrationClient"
     }
   ]
 }

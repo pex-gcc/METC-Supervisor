@@ -1,0 +1,19 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "DatabaseEndpoint": "AccountEndpoint=https://metc-event-database.documents.azure.us:443/;AccountKey=reP6H592hvwexlXkJQqfqAMrXSBAJsDXHYt9sZVLzdn9QK4n2fGid1gvRYDCEbPszneafDBK7KhOACDbTfBUTw==;",
+    "QueueStorageAccount": "DefaultEndpointsProtocol=https;AccountName=metceventsinkpolicy8fb0;AccountKey=Cmzka98Lu9pAcQ1sogYainGs8wUcCQxhIuWepOJQ6QyjJ2nGvf2wjTBy6Fxyfcikxh2/aRF+sF5V+AStRE0How==;EndpointSuffix=core.usgovcloudapi.net",
+    "EventsDatabaseName": "supervisorDatabase",
+    "EventsContainerName": "events",
+    "ConfigContainerName": "ControlConfig",
+    "ActiveCallsContainerName": "ActiveCalls",
+    "ManagementNodeFQDN": "https://mgr.pex-gcc.com",
+    "ManagementNodeUsername": "admin",
+    "ManagementNodePassword": "GCCb055!",
+    "ConferenceNodeFQDN": "https://pex-gcc.com",
+    "SIPDialingDomain": "pex-gcc.com",
+    "SIPDialLocation": "Edge VA GCC High",
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=metceventsinkpolicy8fb0;AccountKey=Cmzka98Lu9pAcQ1sogYainGs8wUcCQxhIuWepOJQ6QyjJ2nGvf2wjTBy6Fxyfcikxh2/aRF+sF5V+AStRE0How==;EndpointSuffix=core.usgovcloudapi.net"
+  }
+}
