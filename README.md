@@ -13,11 +13,9 @@ EventsDatabaseName       - name of the database with Cosmos to store events
 EventsContainerName      - name of the container within the above database to store events
 ConfigContainerName      - name of the container within the above database to store the caller configuration
 ActiveCallsContainerName - name of the container within the above database to store all ongoing calls
-APICallsContainerName    - name of the container within the above database to store API callers
 ManagementNodeFQDN       - management node FQDN for management API access
 ManagementNodeUsername   - management node username for management API access
 ManagementNodePassword   - management node password for management API access
-ConferenceNodeFQDN       - conference node FQDN for client API access
 SIPDialingDomain         - SIP dialing domain for call to operator
 SIPDialLocation          - outgoing location for SIP dial to operator  
 ```

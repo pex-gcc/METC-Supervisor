@@ -10,7 +10,6 @@
     "ManagementNodeFQDN": "https://mgr.pex-gcc.com",
     "ManagementNodeUsername": "admin",
     "ManagementNodePassword": "GCCb055!",
-    "ConferenceNodeFQDN": "https://pex-gcc.com",
     "SIPDialingDomain": "pex-gcc.com",
     "SIPDialLocation": "Edge VA GCC High",
     "FUNCTIONS_WORKER_RUNTIME": "python",
