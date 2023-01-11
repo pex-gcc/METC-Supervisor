@@ -4,7 +4,7 @@ import re
 
 import azure.functions as func
 import cosmosdb_helpers as db_help
-from client import call_operators, get_env, dialout
+from client import get_env, dialout
 
 def main(msg: func.QueueMessage) -> None:
     events_db_name = get_env('EventsDatabaseName')
