@@ -4,7 +4,7 @@ import re
 
 import azure.functions as func
 import cosmosdb_helpers as db_help
-from client import call_operators, get_env
+from client import call_operators, get_env, dialout
 
 def main(msg: func.QueueMessage) -> None:
     events_db_name = get_env('EventsDatabaseName')
@@ -48,7 +48,8 @@ def main(msg: func.QueueMessage) -> None:
             call_info['dialout'] = conf.get('dialout', None)
             if conf and conf.get('dialout') and event.get('data', {}).get('call_direction') == 'in':
                 logging.info(f'QueueParticipantEvents.main: Dialing from {call_info.get("destination_alias", "")} to {call_info.get("conference", "")}')
-                call_operators(call_info)
+                # call_operators(call_info)
+                dialout(call_info)
 
     elif event_type == 'participant_disconnected':
         logging.info(f'QueueParticipantEvents.main: Event {id} is type {event_type}, deleting from active calls db ')
