@@ -80,9 +80,9 @@ def management_dial(from_alias: str, to_alias: str, display_name: str) -> None:
         requests.post(f'{fqdn}{api_dial}', auth=(uname, pwd), json=data)
         
 def call_operators(call_info: dict) -> None:
-    operators = get_operator(call_info.get('operator'))
+    operators = get_operator(call_info.get('dialout'))
             
     if len(operators) == 1:
-        management_dial(call_info.get('destination_alias'), operators[0], call_info.get('operator', {}).get('display_name'))
+        management_dial(call_info.get('destination_alias'), operators[0], call_info.get('dialout', {}).get('display_name'))
      
     return
